@@ -7,6 +7,7 @@ import 'app/astro_app.dart';
 import 'infrastructure/content.dart';
 import 'infrastructure/meeus_engine.dart';
 import 'infrastructure/preferences.dart';
+import 'platform/android_moon_widget.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,10 @@ Future<void> main() async {
       preferences: preferences,
       content: content,
       clock: DateTime.now,
+      androidMoonWidget:
+          !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+          ? AndroidMoonWidget()
+          : null,
     ),
   );
 }

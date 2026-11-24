@@ -1,0 +1,48 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/moon_widget"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/lunar_colour_background">
+    <ImageView
+        android:id="@+id/colour_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="12dp">
+        <ImageView
+            android:id="@+id/colour_swatch"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:importantForAccessibility="no" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="bottom"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/moon_phase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/moon_widget_unavailable"
+                android:textColor="#F6E5FF"
+                android:textSize="17sp"
+                android:fontFamily="serif"
+                android:maxLines="2"
+                android:ellipsize="end" />
+            <TextView
+                android:id="@+id/moon_detail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/colour_title"
+                android:textColor="#F6E5FF"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

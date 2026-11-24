@@ -2,7 +2,7 @@
 
 | Platform | Runner | Baseline integration |
 | --- | --- | --- |
-| Android | Flutter native | Shared calculations and settings. Home-screen widgets are tracked. |
+| Android | Flutter native | Shared calculations and settings. Four Astro Worker home-screen widgets. |
 | iOS | Flutter native | Shared calculations and settings. WidgetKit and Lock Screen widgets are tracked. |
 | macOS | Flutter native | Shared calculations and settings. WidgetKit extensions are tracked. |
 | Windows | Flutter native | Shared calculations and settings. Widgets Board evaluation is tracked. |

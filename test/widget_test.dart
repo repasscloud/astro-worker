@@ -5,6 +5,7 @@ import 'package:astro_worker/app/build_identity.dart';
 import 'package:astro_worker/infrastructure/content.dart';
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
 import 'package:astro_worker/infrastructure/preferences.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,8 +16,10 @@ void main() {
     (tester) async {
       tester.view.physicalSize = const Size(430, 950);
       tester.view.devicePixelRatio = 1;
+      tester.view.padding = const FakeViewPadding(bottom: 48);
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPadding);
       SharedPreferences.setMockInitialValues({'astro.v1.zone': 'UTC'});
       final preferences = await Preferences.open();
       final messenger = tester.binding.defaultBinaryMessenger;
@@ -47,6 +50,7 @@ void main() {
         ),
       );
 
+      expect(tester.getRect(find.byType(ListView)).bottom, 902);
       expect(find.text('Full Moon'), findsWidgets);
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();

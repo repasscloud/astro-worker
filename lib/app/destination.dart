@@ -15,3 +15,5 @@ enum Destination {
   final String label;
   final IconData icon;
 }
+
+enum MoonSection { phase, reflection, colour, calendar }

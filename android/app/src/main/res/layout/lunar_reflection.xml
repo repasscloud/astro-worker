@@ -1,0 +1,33 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/moon_widget"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:background="@drawable/lunar_reflection_background">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/reflection_title"
+        android:textColor="#352440"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+    <TextView
+        android:id="@+id/moon_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/moon_widget_unavailable"
+        android:textColor="#352440"
+        android:textSize="18sp"
+        android:fontFamily="serif"
+        android:maxLines="3"
+        android:ellipsize="end" />
+    <TextView
+        android:id="@+id/moon_phase"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/moon_widget_refresh"
+        android:textColor="#352440"
+        android:textSize="12sp" />
+</LinearLayout>

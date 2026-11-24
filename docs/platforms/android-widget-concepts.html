@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astro Worker · Android widget concepts</title>
+<style>
+  :root { color-scheme: dark; font: 16px system-ui, sans-serif; color: #f4edf9; background: #17131d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { max-width: 1110px; margin: auto; padding: clamp(20px, 5vw, 65px); }
+  header { margin-bottom: 28px; }
+  .brand { color: #d9c2f4; margin: 0; font-size: .9rem; }
+  h1 { font: 500 clamp(2.1rem, 6vw, 4rem)/1.05 Georgia, serif; margin: 12px 0; }
+  p { line-height: 1.5; }
+  .controls { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 32px; margin-bottom: 20px; }
+  .phase-control { display: grid; grid-template-columns: 1fr auto; gap: 9px 16px; flex: 1 1 290px; }
+  input { grid-column: 1 / -1; width: 100%; margin: 0; accent-color: #dbbaff; }
+  output, .axis, figcaption p { color: #d2c4da; }
+  .axis { display: flex; justify-content: space-between; grid-column: 1 / -1; font-size: .76rem; }
+  button { font: inherit; padding: 9px 14px; border-radius: 12px; border: 1px solid #786581; color: inherit; background: #2b2034; cursor: pointer; }
+  :focus-visible { outline: 2px solid #f2d4ff; outline-offset: 4px; }
+  .gallery { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+  figure { margin: 0; border-radius: 22px; overflow: hidden; border: 1px solid #4b3d55; background: #241b2b; }
+  .stage { min-height: 235px; padding: 18px; display: grid; place-items: center; background: radial-gradient(ellipse at 32% 110%, #6e527c, transparent 68%), linear-gradient(125deg,#261b36,#3b2d50 56%,#29243f); }
+  .widget { border-radius: 23px; box-shadow: 0 12px 34px #100b1c80, inset 0 0 0 1px #fef1ff20; }
+  .square { width: 84px; height: 84px; display: grid; place-items: center; background: #16121d; border-radius: 19px; }
+  canvas { display: block; max-width: 100%; height: auto; }
+  .reflection { width: min(100%, 310px); min-height: 140px; display: flex; flex-direction: column; justify-content: center; padding: 16px 20px; background: #e0c3b6; color: #352440; }
+  .small { font-size: .78rem; font-weight: 650; }
+  blockquote { font: 500 1.3rem/1.21 Georgia, serif; margin: 8px 0 10px; }
+  .colour { width: 150px; height: 150px; background: var(--tile); color: var(--ink); padding: 14px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
+  .swatch { border: 1px solid currentColor; opacity: .8; border-radius: 50%; width: 16px; height: 16px; }
+  .colour strong { font: 600 1.33rem/1.08 Georgia, serif; }
+  .info { width: min(100%, 310px); display: grid; grid-template-columns: minmax(0,1fr) minmax(67px, 97px); gap: 12px; align-items: center; background: #1f182b; padding: 16px; }
+  .info strong { display: block; font: 500 1.37rem/1.12 Georgia, serif; margin: 5px 0; }
+  .info .small, .detail { color: #d5bfec; }
+  .detail { font-size: .82rem; }
+  figcaption { padding: 14px 17px; }
+  figcaption h2 { margin: 0; font-size: 1.05rem; }
+  figcaption span { color: #d9c2f4; font-weight: 400; white-space: nowrap; }
+  figcaption p { font-size: .88rem; margin: 6px 0 0; }
+  footer { color: #d2c4da; font-size: .84rem; margin-top: 22px; }
+  @media (max-width: 620px) { .gallery { grid-template-columns: 1fr; } .stage { min-height: 195px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="brand">Astro Worker</p>
+    <h1>Android widget concepts</h1>
+    <p>Four ways to check in with the Moon from your home screen.</p>
+  </header>
+  <div class="controls">
+    <div class="phase-control">
+      <label for="cycle">Preview lunar phase</label>
+      <output id="phase" for="cycle"></output>
+      <input id="cycle" type="range" min="0" max="100" value="38">
+      <div class="axis" aria-hidden="true"><span>New</span><span>Full</span><span>New</span></div>
+    </div>
+    <button type="button" id="hemisphere" aria-pressed="true">Southern view</button>
+  </div>
+  <section class="gallery" aria-label="Widget concepts">
+    <figure>
+      <div class="stage"><div class="widget square"><canvas id="moon-small" width="128" height="128" style="width:64px" role="img" aria-label="Moon phase illustration"></canvas></div></div>
+      <figcaption><h2>Moon Glance <span>· 1 × 1</span></h2><p>A single square with the current Moon phase as an image. Tap for Moon details.</p></figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><div class="widget reflection"><span class="small">Lunar reflection</span><blockquote id="reflection"></blockquote><span class="small" id="reflection-phase"></span></div></div>
+      <figcaption><h2>Lunar Reflection <span>· 4 × 2</span></h2><p>A short journal prompt inspired by the current phase. Tap for the full reflection.</p></figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><div class="widget colour" id="colour"><span class="swatch" aria-hidden="true"></span><strong id="colour-name"></strong><span class="small">Lunar colour</span></div></div>
+      <figcaption><h2>Lunar Colour <span>· 2 × 2</span></h2><p>A decorative colour chosen for each phase. Tap to see its name and association.</p></figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><div class="widget info"><div><span class="small">Moon phase</span><strong id="info-phase"></strong><span class="detail" id="illumination"></span><br><span class="detail" id="next-phase"></span></div><canvas id="moon-info" width="194" height="194" style="width:97px" role="img" aria-label="Moon phase illustration"></canvas></div></div>
+      <figcaption><h2>Moon Phase &amp; Info <span>· 4 × 2</span></h2><p>Phase, illumination and the next major phase at a glance. Tap for the lunar calendar.</p></figcaption>
+    </figure>
+  </section>
+  <footer>Launcher cell sizes are indicative. The slider uses an illustrative lunar cycle.</footer>
+</main>
+<script>
+  const phases = [
+    ['New Moon', 'What would you like to begin quietly?', 'Midnight Plum', '#37223f', '#f6e5ff'],
+    ['Waxing Crescent', 'What small step would make a difference today?', 'Soft Lilac', '#c8abe2', '#30213e'],
+    ['First Quarter', 'What decision would give you room to move?', 'Dusty Iris', '#a58bc4', '#251732'],
+    ['Waxing Gibbous', 'What could you refine before sharing it?', 'Rose Quartz', '#e2b0c5', '#402337'],
+    ['Full Moon', 'What feels worth acknowledging today?', 'Moonstone', '#e2dbe8', '#30253d'],
+    ['Waning Gibbous', 'What have you learned that you could pass on?', 'Muted Copper', '#c48776', '#2d1821'],
+    ['Last Quarter', 'What obligation are you ready to reconsider?', 'Blue Slate', '#8191b1', '#151c2d'],
+    ['Waning Crescent', 'Where could you make a little more space for rest?', 'Quiet Sage', '#acb7a0', '#223027'],
+  ];
+  const byId = id => document.getElementById(id);
+  const slider = byId('cycle');
+  const toggle = byId('hemisphere');
+  let south = true;
+  const craters = [[-.43,-.38,.2,.3],[.33,.17,.24,.32],[.21,-.36,.32,.38],[-.21,.26,.3,.26],[-.5,.41,.12,.27],[.46,-.25,.11,.24],[.1,.56,.16,.25],[.56,.51,.14,.25]];
+  function drawMoon(canvas, angle, name) {
+    const context = canvas.getContext('2d');
+    const size = canvas.width;
+    const radius = size * .46;
+    const frame = context.createImageData(size, size);
+    for (let row = 0; row < size; row++) {
+      for (let column = 0; column < size; column++) {
+        const x = (column + .5 - size / 2) / radius;
+        const y = (row + .5 - size / 2) / radius;
+        if (x*x + y*y > 1) continue;
+        const z = Math.sqrt(1 - x*x - y*y);
+        const lunarX = south ? -x : x;
+        const lunarY = south ? -y : y;
+        const sun = lunarX * Math.sin(angle) - z * Math.cos(angle);
+        const terrain = craters.reduce((shade, [cx,cy,r,depth]) => {
+          const d = Math.hypot(lunarX-cx, lunarY-cy) / r;
+          return shade - depth * Math.exp(-d*d*2) + .06 * Math.exp(-((d-1)**2)*22);
+        }, .97);
+        const grain = .94 + .12 * ((column * 47 + row * 71 + column * row * 11) % 97) / 97;
+        const glow = sun > 0 ? 55 + 200 * Math.sqrt(sun) : 16 + 10 * z;
+        const pixel = (row * size + column) * 4;
+        const light = glow * terrain * grain;
+        frame.data.set([light * 1.02, light, light * 1.09, 255], pixel);
+      }
+    }
+    context.putImageData(frame, 0, 0);
+    canvas.setAttribute('aria-label', name + ' illustration');
+  }
+  function render() {
+    const fraction = Number(slider.value) / 100;
+    const angle = fraction * 2 * Math.PI;
+    const majors = ['First Quarter', 'Full Moon', 'Last Quarter', 'New Moon'];
+    const quarter = Math.floor(fraction * 4 + .00001);
+    const atQuarter = Number(slider.value) % 25 === 0;
+    const phaseIndex = atQuarter ? (quarter * 2) % 8 : Math.min(7, quarter * 2 + 1);
+    const [name, prompt, colourName, colour, ink] = phases[phaseIndex];
+    byId('phase').value = name;
+    slider.setAttribute('aria-valuetext', name);
+    byId('reflection').textContent = prompt;
+    byId('reflection-phase').textContent = name;
+    byId('colour-name').textContent = colourName;
+    byId('colour').style.setProperty('--tile', colour);
+    byId('colour').style.setProperty('--ink', ink);
+    byId('info-phase').textContent = name;
+    byId('illumination').textContent = Math.round(50 * (1 - Math.cos(angle))) + '% illuminated';
+    byId('next-phase').textContent = 'Next · ' + majors[quarter % 4];
+    drawMoon(byId('moon-small'), angle, name);
+    drawMoon(byId('moon-info'), angle, name);
+  }
+  slider.addEventListener('input', render);
+  toggle.addEventListener('click', () => {
+    south = !south;
+    toggle.textContent = south ? 'Southern view' : 'Northern view';
+    toggle.setAttribute('aria-pressed', String(south));
+    render();
+  });
+  render();
+</script>
+</body>
+</html>

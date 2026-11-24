@@ -10,6 +10,7 @@ import '../domain/horizon.dart';
 import '../features/observatory.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/preferences.dart';
+import '../platform/android_moon_widget.dart';
 import 'branding.dart';
 import 'build_identity.dart';
 import 'destination.dart';
@@ -21,11 +22,13 @@ class AstroApp extends StatefulWidget {
     required this.preferences,
     required this.content,
     required this.clock,
+    this.androidMoonWidget,
   });
   final AstronomyEngine engine;
   final Preferences preferences;
   final EditorialContent content;
   final DateTime Function() clock;
+  final AndroidMoonWidget? androidMoonWidget;
 
   @override
   State<AstroApp> createState() => _AstroAppState();
@@ -34,10 +37,13 @@ class AstroApp extends StatefulWidget {
 class _AstroAppState extends State<AstroApp> {
   final _scaffold = GlobalKey<ScaffoldState>();
   Destination _destination = Destination.today;
+  MoonSection? _moonSection;
+  int _widgetOpenCount = 0;
   DateTime? _selected;
   DateTime? _computed;
   SkySnapshot? _sky;
   late final Timer _timer;
+  AppLifecycleListener? _lifecycle;
   late ThemeMode _themeMode;
   late String _zone;
   late bool _spiritual;
@@ -78,6 +84,21 @@ class _AstroAppState extends State<AstroApp> {
         _observer = null;
       }
     }
+    final androidWidget = widget.androidMoonWidget;
+    if (androidWidget != null) {
+      androidWidget.onOpenMoon = (section) {
+        if (!mounted) return;
+        _scaffold.currentState?.closeDrawer();
+        setState(() {
+          _destination = Destination.moon;
+          _moonSection = section;
+          _widgetOpenCount++;
+          _selected = null;
+        });
+      };
+      _lifecycle = AppLifecycleListener(onResume: _refreshMoonWidget);
+      _refreshMoonWidget();
+    }
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (_selected == null) setState(() {});
     });
@@ -86,7 +107,24 @@ class _AstroAppState extends State<AstroApp> {
   @override
   void dispose() {
     _timer.cancel();
+    _lifecycle?.dispose();
+    widget.androidMoonWidget?.onOpenMoon = null;
     super.dispose();
+  }
+
+  void _refreshMoonWidget() {
+    final androidWidget = widget.androidMoonWidget;
+    if (androidWidget == null) return;
+    unawaited(
+      androidWidget.refresh(
+        widget.engine,
+        widget.clock(),
+        _zone,
+        _masters,
+        south: _south,
+        showSpiritual: _spiritual,
+      ),
+    );
   }
 
   ThemeData _theme(Brightness brightness) => ThemeData(
@@ -140,72 +178,80 @@ class _AstroAppState extends State<AstroApp> {
                     ),
             ),
             drawer: wide ? null : Drawer(child: SafeArea(child: navigation)),
-            body: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (wide) ...[
-                  SizedBox(
-                    width: 210,
-                    child: ColoredBox(
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      child: navigation,
+            body: SafeArea(
+              top: false,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (wide) ...[
+                    SizedBox(
+                      width: 210,
+                      child: ColoredBox(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLow,
+                        child: navigation,
+                      ),
+                    ),
+                    const VerticalDivider(width: 1),
+                  ],
+                  Expanded(
+                    child: ListView(
+                      key: _moonSection == null
+                          ? PageStorageKey(_destination)
+                          : ValueKey(_widgetOpenCount),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                      children: [
+                        Text(
+                          _destination.label,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        if (_destination != Destination.settings) ...[
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.schedule),
+                                onPressed: () => _pickInstant(context, day),
+                                label: Text(formatMoment(context, day)),
+                              ),
+                              TextButton(
+                                onPressed: _selected == null
+                                    ? null
+                                    : () => setState(() => _selected = null),
+                                child: const Text('Return to now'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (_destination == Destination.settings)
+                          ..._settings(context)
+                        else
+                          Observatory(
+                            destination: _destination,
+                            moonSection: _moonSection,
+                            instant: instant,
+                            day: day,
+                            zone: _zone,
+                            engine: widget.engine,
+                            sky: _sky,
+                            numerology: numerology,
+                            daily: daily,
+                            birth: _birth,
+                            showSpiritual: _spiritual,
+                            south: _south,
+                            orb: _orb,
+                            observer: _observer,
+                          ),
+                      ],
                     ),
                   ),
-                  const VerticalDivider(width: 1),
                 ],
-                Expanded(
-                  child: ListView(
-                    key: PageStorageKey(_destination),
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                    children: [
-                      Text(
-                        _destination.label,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      if (_destination != Destination.settings) ...[
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            OutlinedButton.icon(
-                              icon: const Icon(Icons.schedule),
-                              onPressed: () => _pickInstant(context, day),
-                              label: Text(formatMoment(context, day)),
-                            ),
-                            TextButton(
-                              onPressed: _selected == null
-                                  ? null
-                                  : () => setState(() => _selected = null),
-                              child: const Text('Return to now'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (_destination == Destination.settings)
-                        ..._settings(context)
-                      else
-                        Observatory(
-                          destination: _destination,
-                          instant: instant,
-                          day: day,
-                          zone: _zone,
-                          engine: widget.engine,
-                          sky: _sky,
-                          numerology: numerology,
-                          daily: daily,
-                          birth: _birth,
-                          showSpiritual: _spiritual,
-                          south: _south,
-                          orb: _orb,
-                          observer: _observer,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           );
         },
@@ -227,7 +273,10 @@ class _AstroAppState extends State<AstroApp> {
           title: Text(destination.label),
           onTap: () {
             _scaffold.currentState?.closeDrawer();
-            setState(() => _destination = destination);
+            setState(() {
+              _destination = destination;
+              _moonSection = null;
+            });
           },
         ),
     ],
@@ -333,6 +382,7 @@ class _AstroAppState extends State<AstroApp> {
       value: _spiritual,
       onChanged: (value) {
         setState(() => _spiritual = value);
+        _refreshMoonWidget();
         unawaited(_save(context, _preferences.writeFlag('spiritual', value)));
       },
     ),
@@ -342,6 +392,7 @@ class _AstroAppState extends State<AstroApp> {
       value: _masters,
       onChanged: (value) {
         setState(() => _masters = value);
+        _refreshMoonWidget();
         unawaited(_save(context, _preferences.writeFlag('masters', value)));
       },
     ),
@@ -351,6 +402,7 @@ class _AstroAppState extends State<AstroApp> {
       value: _south,
       onChanged: (value) {
         setState(() => _south = value);
+        _refreshMoonWidget();
         unawaited(_save(context, _preferences.writeFlag('south', value)));
       },
     ),
@@ -563,6 +615,7 @@ class _AstroAppState extends State<AstroApp> {
       return;
     }
     setState(() => _zone = proposed);
+    _refreshMoonWidget();
     await _save(context, _preferences.writeText('zone', proposed));
   }
 }

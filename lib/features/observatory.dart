@@ -7,6 +7,7 @@ import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
 import '../domain/horizon.dart';
 import '../infrastructure/content.dart';
+import '../infrastructure/lunar_editorial.dart';
 import '../platform/widget_snapshot.dart';
 import '../shared/moon_disc.dart';
 
@@ -26,6 +27,7 @@ class Observatory extends StatelessWidget {
   const Observatory({
     super.key,
     required this.destination,
+    this.moonSection,
     required this.instant,
     required this.day,
     required this.zone,
@@ -41,6 +43,7 @@ class Observatory extends StatelessWidget {
   });
 
   final Destination destination;
+  final MoonSection? moonSection;
   final DateTime instant;
   final DateTime day;
   final String zone;
@@ -165,6 +168,7 @@ class Observatory extends StatelessWidget {
 
   List<Widget> _moon(BuildContext context, SkySnapshot snapshot) {
     final moon = snapshot.positions[Body.moon]!;
+    final editorial = lunarEditorial(snapshot.phase);
     final age = snapshot.lunarAgeDays;
     final nearby = engine
         .events(
@@ -172,8 +176,8 @@ class Observatory extends StatelessWidget {
           instant.add(const Duration(days: 31)),
         )
         .where((event) => event.category == EventCategory.moonPhase);
-    return [
-      _Panel(
+    final panels = <MoonSection, Widget>{
+      MoonSection.phase: _Panel(
         title: snapshot.phase,
         children: [
           Align(
@@ -198,13 +202,37 @@ class Observatory extends StatelessWidget {
           const Text('Observer-dependent orientation is pending.'),
         ],
       ),
-      _horizon(context, lunar: true),
-      _Panel(
+      if (showSpiritual || moonSection == MoonSection.reflection)
+        MoonSection.reflection: _Panel(
+          title: 'Lunar reflection',
+          children: [
+            Text(
+              showSpiritual ? editorial.prompt : 'Enable spiritual content in Settings to see lunar reflections.',
+            ),
+          ],
+        ),
+      MoonSection.colour: _Panel(
+        title: 'Lunar colour · ${editorial.colour}',
+        children: [Text(editorial.association)],
+      ),
+      MoonSection.calendar: _Panel(
         title: 'Previous and upcoming lunar phases',
         children: [
           for (final event in nearby) _eventTile(context, event, zone),
         ],
       ),
+    };
+    final focused = panels.remove(moonSection);
+    return [
+      ?focused,
+      for (final section in [
+        MoonSection.phase,
+        MoonSection.reflection,
+        MoonSection.colour,
+      ])
+        ?panels[section],
+      _horizon(context, lunar: true),
+      ?panels[MoonSection.calendar],
     ];
   }
 

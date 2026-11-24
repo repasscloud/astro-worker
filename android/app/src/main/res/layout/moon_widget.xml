@@ -1,0 +1,51 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/moon_widget"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="@drawable/moon_widget_background">
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/moon_widget_title"
+            android:textColor="#D5BFEC"
+            android:textSize="12sp" />
+        <TextView
+            android:id="@+id/moon_phase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/moon_widget_unavailable"
+            android:textColor="#F4EDF9"
+            android:textSize="18sp"
+            android:fontFamily="serif" />
+        <TextView
+            android:id="@+id/moon_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/moon_widget_refresh"
+            android:textColor="#D5BFEC"
+            android:textSize="12sp" />
+        <TextView
+            android:id="@+id/moon_next"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#D5BFEC"
+            android:textSize="12sp" />
+    </LinearLayout>
+    <ImageView
+        android:id="@+id/moon_image"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:contentDescription="@string/moon_widget_unavailable"
+        android:scaleType="fitCenter"
+        android:src="@mipmap/ic_launcher"
+        android:layout_marginStart="6dp" />
+</LinearLayout>

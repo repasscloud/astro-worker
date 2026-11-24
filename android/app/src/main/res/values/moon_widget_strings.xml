@@ -1,0 +1,14 @@
+<resources>
+    <string name="moon_widget_name">Moon Phase &amp; Info</string>
+    <string name="moon_glance_name">Moon Glance</string>
+    <string name="lunar_reflection_name">Lunar Reflection</string>
+    <string name="lunar_colour_name">Lunar Colour</string>
+    <string name="moon_widget_title">Moon phase</string>
+    <string name="moon_widget_unavailable">Open Astro Worker</string>
+    <string name="moon_widget_refresh">Tap to refresh</string>
+    <string name="moon_widget_detail">%1$s illuminated</string>
+    <string name="moon_widget_next">Next · %1$s</string>
+    <string name="reflection_disabled">Enable spiritual content in Astro Worker.</string>
+    <string name="reflection_title">Lunar reflection</string>
+    <string name="colour_title">Lunar colour</string>
+</resources>
