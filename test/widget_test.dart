@@ -1,0 +1,48 @@
+import 'package:astro_worker/app/astro_app.dart';
+import 'package:astro_worker/infrastructure/content.dart';
+import 'package:astro_worker/infrastructure/meeus_engine.dart';
+import 'package:astro_worker/infrastructure/preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  testWidgets(
+    'narrow navigation opens Moon and persists spiritual preference',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 950);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      SharedPreferences.setMockInitialValues({'astro.v1.zone': 'UTC'});
+      final preferences = await Preferences.open();
+      final content = await EditorialContent.load();
+      await tester.pumpWidget(
+        AstroApp(
+          engine: MeeusEngine(),
+          preferences: preferences,
+          content: content,
+          clock: () => DateTime.utc(2025, 1, 13, 22, 27),
+        ),
+      );
+
+      expect(find.text('Full Moon'), findsWidgets);
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Moon').first);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Northern Hemisphere convention'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Show spiritual content'));
+      await tester.pumpAndSettle();
+      expect(preferences.flag('spiritual'), isFalse);
+    },
+  );
+}

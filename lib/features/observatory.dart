@@ -1,0 +1,532 @@
+import 'package:flutter/material.dart';
+
+import '../app/destination.dart';
+import '../domain/astrology.dart';
+import '../domain/astronomy.dart';
+import '../domain/civil_time.dart';
+import '../domain/numerology.dart';
+import '../infrastructure/content.dart';
+import '../platform/widget_snapshot.dart';
+import '../shared/moon_disc.dart';
+
+String titleCase(String value) => value[0].toUpperCase() + value.substring(1);
+
+String formatMoment(BuildContext context, DateTime value) {
+  final localizations = MaterialLocalizations.of(context);
+  final date = localizations.formatMediumDate(value);
+  final time = localizations.formatTimeOfDay(
+    TimeOfDay.fromDateTime(value),
+    alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+  );
+  return '$date · $time ${value.timeZoneName}';
+}
+
+class Observatory extends StatelessWidget {
+  const Observatory({
+    super.key,
+    required this.destination,
+    required this.instant,
+    required this.day,
+    required this.zone,
+    required this.engine,
+    required this.sky,
+    required this.numerology,
+    required this.daily,
+    required this.birth,
+    required this.showSpiritual,
+    required this.south,
+    required this.orb,
+  });
+
+  final Destination destination;
+  final DateTime instant;
+  final DateTime day;
+  final String zone;
+  final AstronomyEngine engine;
+  final SkySnapshot? sky;
+  final Numerology numerology;
+  final DailyContent daily;
+  final DateTime? birth;
+  final bool showSpiritual;
+  final bool south;
+  final double orb;
+
+  @override
+  Widget build(BuildContext context) {
+    final snapshot = sky;
+    final astronomy = snapshot == null
+        ? const [Text('Astronomy is available from 2000 through 2050 UTC.')]
+        : switch (destination) {
+            Destination.today => _today(context, snapshot),
+            Destination.moon => _moon(context, snapshot),
+            Destination.planets => [
+              const Text('Apparent geocentric positions · tropical zodiac'),
+              for (final position in snapshot.positions.values)
+                _positionCard(context, position),
+              const Text(
+                'Pluto, Chiron and lunar nodes are awaiting provider verification.',
+              ),
+            ],
+            Destination.astrology => _astrology(snapshot),
+            Destination.widgets => _widgets(snapshot),
+            _ => <Widget>[],
+          };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: switch (destination) {
+        Destination.calendar => [
+          CalendarPanel(engine: engine, day: day, zone: zone),
+        ],
+        Destination.numerology => _numbers(),
+        Destination.spiritual =>
+          showSpiritual
+              ? [
+                  _editorial(),
+                  _Panel(title: 'Reflection', children: [Text(daily.prompt)]),
+                ]
+              : [
+                  const Text(
+                    'Spiritual content is disabled. Enable it in Settings.',
+                  ),
+                ],
+        _ => astronomy,
+      },
+    );
+  }
+
+  List<Widget> _today(BuildContext context, SkySnapshot snapshot) {
+    final moon = snapshot.positions[Body.moon]!;
+    final sun = snapshot.positions[Body.sun]!;
+    final retrogrades = snapshot.positions.values
+        .where((position) => position.retrograde)
+        .map((position) => titleCase(position.body.name));
+    final aspects = activeAspects(snapshot, orb);
+    final events = engine.events(
+      instant,
+      instant.add(const Duration(days: 31)),
+    );
+    return [
+      _Panel(
+        title: snapshot.phase,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MoonDisc(
+              illumination: snapshot.illumination,
+              waxing: snapshot.waxing,
+              south: south,
+            ),
+          ),
+          Text(
+            '${(snapshot.illumination * 100).toStringAsFixed(1)}% illuminated',
+          ),
+          Text(
+            'Tropical zodiac · Moon in ${moon.sign()} · Sun in ${sun.sign()}',
+          ),
+        ],
+      ),
+      _Panel(
+        title: 'Planetary motion and aspects',
+        children: [
+          Text(
+            retrogrades.isEmpty
+                ? 'No planets retrograde.'
+                : 'Retrograde · ${retrogrades.join(', ')}',
+          ),
+          if (aspects.isEmpty)
+            const Text('No major aspects within the selected orb.'),
+          for (final aspect in aspects.take(3)) Text(_aspectText(aspect)),
+        ],
+      ),
+      _Panel(
+        title: 'Upcoming events',
+        children: [
+          if (events.isEmpty)
+            const Text(
+              'No events in the next 31 days within the supported dates.',
+            ),
+          for (final event in events.take(4)) _eventTile(context, event, zone),
+        ],
+      ),
+      _Panel(
+        title: 'Universal day ${numerology.universalDay(day)}',
+        children: [
+          if (showSpiritual) Text('${daily.colour} · ${daily.theme}'),
+          if (showSpiritual) Text(daily.affirmation),
+          if (!showSpiritual) const Text('Traditional numerology'),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _moon(BuildContext context, SkySnapshot snapshot) {
+    final moon = snapshot.positions[Body.moon]!;
+    final age = snapshot.lunarAgeDays;
+    final nearby = engine
+        .events(
+          instant.subtract(const Duration(days: 31)),
+          instant.add(const Duration(days: 31)),
+        )
+        .where((event) => event.category == EventCategory.moonPhase);
+    return [
+      _Panel(
+        title: snapshot.phase,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MoonDisc(
+              illumination: snapshot.illumination,
+              waxing: snapshot.waxing,
+              south: south,
+            ),
+          ),
+          Text(
+            '${(snapshot.illumination * 100).toStringAsFixed(1)}% illuminated · ${snapshot.waxing ? 'Waxing' : 'Waning'}',
+          ),
+          Text(
+            'Lunar age · ${age == null ? 'Outside available phase history' : '${age.toStringAsFixed(2)} days'}',
+          ),
+          Text('Distance · ${moon.distanceKm!.round()} km'),
+          Text('Tropical zodiac · ${moon.sign()} ${moon.zodiacPosition()}'),
+          Text(
+            'Schematic · ${south ? 'Southern' : 'Northern'} Hemisphere convention',
+          ),
+          const Text(
+            'Local Moonrise, Moonset and observer orientation are pending.',
+          ),
+        ],
+      ),
+      _Panel(
+        title: 'Previous and upcoming lunar phases',
+        children: [
+          for (final event in nearby) _eventTile(context, event, zone),
+        ],
+      ),
+    ];
+  }
+
+  Widget _positionCard(
+    BuildContext context,
+    CelestialPosition position,
+  ) => Card(
+    child: ListTile(
+      leading: const Icon(Icons.radio_button_checked),
+      title: Text(titleCase(position.body.name)),
+      subtitle: Text(
+        '${position.sign()} ${position.zodiacPosition()} · ${position.motion}',
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(titleCase(position.body.name)),
+          content: SingleChildScrollView(
+            child: Text(
+              [
+                'Ecliptic longitude · ${position.longitude.toStringAsFixed(4)}°',
+                'Ecliptic latitude · ${position.latitude.toStringAsFixed(4)}°',
+                'Right ascension · ${(position.rightAscension / 15).toStringAsFixed(4)} h',
+                'Declination · ${position.declination.toStringAsFixed(4)}°',
+                'Longitude speed · ${position.speed.toStringAsFixed(4)}° per day',
+                if (position.distanceKm case final distance?)
+                  'Distance · ${distance.round()} km',
+                'Geocentric equinox and ecliptic of date',
+              ].join('\n'),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  List<Widget> _astrology(SkySnapshot snapshot) {
+    final aspects = activeAspects(snapshot, orb);
+    return [
+      const Text('Traditional astrology · Tropical zodiac'),
+      _Panel(
+        title: 'Active major aspects',
+        children: [
+          if (aspects.isEmpty)
+            const Text('No major aspects within the selected orb.'),
+          for (final aspect in aspects) Text(_aspectText(aspect)),
+        ],
+      ),
+      _Panel(
+        title: 'Zodiac positions',
+        children: [
+          for (final position in snapshot.positions.values)
+            Text(
+              '${titleCase(position.body.name)} · ${position.sign()} ${position.zodiacPosition()}',
+            ),
+        ],
+      ),
+    ];
+  }
+
+  String _aspectText(ActiveAspect aspect) =>
+      '${titleCase(aspect.first.name)} ${aspect.aspect.name} ${titleCase(aspect.second.name)} · ${aspect.orb.toStringAsFixed(1)}° · ${aspect.motion}';
+
+  List<Widget> _numbers() {
+    final date = birth;
+    return [
+      _Panel(
+        title: 'Universal numbers',
+        children: [
+          Text('Year · ${numerology.universalYear(day)}'),
+          Text('Month · ${numerology.universalMonth(day)}'),
+          Text('Day · ${numerology.universalDay(day)} · ${daily.theme}'),
+          const Text(
+            'Digits are summed iteratively. The reduced year feeds the month, which feeds the day.',
+          ),
+        ],
+      ),
+      _Panel(
+        title: 'Personal numbers',
+        children: [
+          if (date == null)
+            const Text(
+              'Add an optional birth date in Settings to calculate personal numbers.',
+            ),
+          if (date != null) ...[
+            Text('Life path · ${numerology.lifePath(date)}'),
+            Text('Birthday · ${numerology.reduce(date.day)}'),
+            Text('Personal year · ${numerology.personalYear(day, date)}'),
+            Text('Personal month · ${numerology.personalMonth(day, date)}'),
+            Text('Personal day · ${numerology.personalDay(day, date)}'),
+          ],
+        ],
+      ),
+      const Text('Numerology is a traditional interpretive practice.'),
+    ];
+  }
+
+  Widget _editorial() => _Panel(
+    title: 'Daily colour · ${daily.colour}',
+    children: [
+      Align(
+        alignment: Alignment.centerLeft,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Color(0xff000000 | daily.rgb),
+          ),
+          child: const SizedBox(width: 84, height: 44),
+        ),
+      ),
+      Text('Intention · ${daily.theme}'),
+      Text(daily.affirmation),
+      const Text(
+        'Original editorial content selected by universal day number.',
+      ),
+    ],
+  );
+
+  List<Widget> _widgets(SkySnapshot snapshot) {
+    final capability = currentWidgetCapability;
+    final platformName = switch (capability) {
+      WidgetCapability.android => 'Android Home Screen',
+      WidgetCapability.appleHome => 'iOS Home Screen and Lock Screen',
+      WidgetCapability.macDesktop => 'macOS widgets',
+      WidgetCapability.windowsBoard => 'Windows widget board',
+      WidgetCapability.webDashboard => 'Web dashboard',
+      WidgetCapability.unavailable => 'Current platform',
+    };
+    final preview = WidgetSnapshot.fromSky(
+      instant: instant,
+      expiresAt: instant.add(const Duration(minutes: 15)),
+      zone: zone,
+      sky: snapshot,
+      universalDay: numerology.universalDay(day),
+    );
+    return [
+      _Panel(
+        title: platformName,
+        children: [
+          Text(
+            capability == WidgetCapability.webDashboard
+                ? 'The installable web dashboard supports offline access after caching.'
+                : 'Native widget installation is pending on this platform.',
+          ),
+        ],
+      ),
+      _Panel(
+        title: 'Moon Phase · Small preview',
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MoonDisc(
+              illumination: preview.illumination,
+              waxing: snapshot.waxing,
+              south: south,
+            ),
+          ),
+          Text('${preview.phase} · ${(preview.illumination * 100).round()}%'),
+        ],
+      ),
+      _Panel(
+        title: 'Daily overview · Medium preview',
+        children: [
+          Text('Moon in ${preview.moonSign}'),
+          Text('Universal day ${preview.dailyNumber}'),
+        ],
+      ),
+    ];
+  }
+}
+
+enum CalendarSpan { day, week, month, year }
+
+class CalendarPanel extends StatefulWidget {
+  const CalendarPanel({
+    super.key,
+    required this.engine,
+    required this.day,
+    required this.zone,
+  });
+  final AstronomyEngine engine;
+  final DateTime day;
+  final String zone;
+
+  @override
+  State<CalendarPanel> createState() => _CalendarPanelState();
+}
+
+class _CalendarPanelState extends State<CalendarPanel> {
+  CalendarSpan _span = CalendarSpan.month;
+  final _categories = EventCategory.values.toSet();
+
+  @override
+  Widget build(BuildContext context) {
+    final day = widget.day;
+    final midnight = DateTime.utc(day.year, day.month, day.day);
+    final (start, end) = switch (_span) {
+      CalendarSpan.day => (midnight, midnight.add(const Duration(days: 1))),
+      CalendarSpan.week => (
+        midnight.subtract(Duration(days: midnight.weekday - 1)),
+        midnight.add(Duration(days: 8 - midnight.weekday)),
+      ),
+      CalendarSpan.month => (
+        DateTime.utc(day.year, day.month),
+        DateTime.utc(day.year, day.month + 1),
+      ),
+      CalendarSpan.year => (DateTime.utc(day.year), DateTime.utc(day.year + 1)),
+    };
+    final events = widget.engine
+        .events(
+          start.subtract(const Duration(days: 1)),
+          end.add(const Duration(days: 1)),
+        )
+        .where((event) {
+          final local = inDisplayZone(event.instant, widget.zone);
+          final date = DateTime.utc(local.year, local.month, local.day);
+          return !date.isBefore(start) &&
+              date.isBefore(end) &&
+              _categories.contains(event.category);
+        })
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            for (final span in CalendarSpan.values)
+              ChoiceChip(
+                label: Text(titleCase(span.name)),
+                selected: _span == span,
+                onSelected: (_) => setState(() => _span = span),
+              ),
+          ],
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            for (final category in EventCategory.values)
+              FilterChip(
+                label: Text(switch (category) {
+                  EventCategory.moonPhase => 'Moon phases',
+                  EventCategory.apsis => 'Lunar apsides',
+                  EventCategory.season => 'Seasons',
+                  EventCategory.eclipse => 'Eclipses',
+                }),
+                selected: _categories.contains(category),
+                onSelected: (selected) => setState(() {
+                  if (selected) {
+                    _categories.add(category);
+                  } else {
+                    _categories.remove(category);
+                  }
+                }),
+              ),
+          ],
+        ),
+        _Panel(
+          title: 'Calculated events',
+          children: [
+            if (events.isEmpty)
+              const Text('No matching events in this period.'),
+            for (final event in events) _eventTile(context, event, widget.zone),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+Widget _eventTile(BuildContext context, SkyEvent event, String zone) {
+  final time = formatMoment(context, inDisplayZone(event.instant, zone));
+  return ListTile(
+    contentPadding: EdgeInsets.zero,
+    title: Text(event.name),
+    subtitle: Text(time),
+    onTap: () => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(event.name),
+        content: Text(
+          '$time\n${formatMoment(context, event.instant)}\n${titleCase(event.body.name)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({required this.title, required this.children});
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: 12),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+          ),
+          ...children,
+        ],
+      ),
+    ),
+  );
+}
