@@ -40,9 +40,10 @@ jobs:
           - target: ios
             runner: macos-latest
             command: flutter build ios --simulator --no-codesign
-          - target: macos
-            runner: macos-latest
-            command: flutter build macos --debug
+          # macOS desktop validation runs locally to save Actions minutes.
+          # - target: macos
+          #   runner: macos-latest
+          #   command: flutter build macos --debug
           - target: windows
             runner: windows-latest
             command: flutter build windows --debug
@@ -64,5 +65,5 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
       - run: ${{ matrix.command }}
-      - if: matrix.target == 'macos'
-        run: flutter test integration_test -d macos
+      # - if: matrix.target == 'macos'
+      #   run: flutter test integration_test -d macos

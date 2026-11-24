@@ -11,3 +11,5 @@
 Host `build/web` on HTTPS or a secure localhost context; deploy the directory atomically and serve `offline-worker.js` with a revalidation policy. Pass `--base-href /path/` to the build script when serving from a subpath. The application uses a bundled renderer and versioned precache. Keep signing and storefront deployment outside pull request validation.
 
 Update `.flutter-version`, SDK constraints and lockfile together in a toolchain change. Rerun all builds and update the compatibility matrix.
+
+Run macOS desktop validation locally with `scripts/check.sh`, `flutter build macos --debug` and `flutter test integration_test -d macos`. The desktop matrix entry and its integration test step are commented out in `.github/workflows/validate.yml` so they can be re-enabled together.
