@@ -8,6 +8,7 @@ import 'infrastructure/content.dart';
 import 'infrastructure/meeus_engine.dart';
 import 'infrastructure/preferences.dart';
 import 'platform/native_moon_widget.dart';
+import 'platform/native_reminders.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,12 @@ Future<void> main() async {
       preferences: preferences,
       content: content,
       clock: DateTime.now,
+      nativeReminders:
+          !kIsWeb &&
+              (defaultTargetPlatform == TargetPlatform.android ||
+                  defaultTargetPlatform == TargetPlatform.macOS)
+          ? NativeReminders()
+          : null,
       nativeMoonWidget:
           !kIsWeb &&
               (defaultTargetPlatform == TargetPlatform.android ||

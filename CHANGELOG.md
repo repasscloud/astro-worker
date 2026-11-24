@@ -27,3 +27,5 @@
 - Add local settings backup, validated restore, and reset. Migrate existing preferences and exclude personal details from backups by default. ([#25](https://github.com/repasscloud/astro-worker/issues/25))
 - Embed a small and medium Moon widget for macOS with offline WidgetKit timelines and an App Group signing template. ([#15](https://github.com/repasscloud/astro-worker/issues/15))
 - Record the Windows Widgets Board packaging path and the Windows 11 host checks still required. ([#16](https://github.com/repasscloud/astro-worker/issues/16))
+- Add opt-in Android and macOS reminders for lunar and seasonal events, with advance timing, quiet hours, and rolling local scheduling. ([#18](https://github.com/repasscloud/astro-worker/issues/18))
+- Validate Sun, Moon and seven planetary positions against JPL Horizons samples at the supported range boundaries and a midpoint. ([#3](https://github.com/repasscloud/astro-worker/issues/3))

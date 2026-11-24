@@ -7,12 +7,15 @@ import 'package:timezone/timezone.dart' as tz;
 import '../domain/astronomy.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
+import '../domain/reminders.dart';
 import '../domain/zodiac.dart';
 import '../domain/horizon.dart';
 import '../features/observatory.dart';
+import '../features/reminder_settings.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/preferences.dart';
 import '../platform/native_moon_widget.dart';
+import '../platform/native_reminders.dart';
 import 'branding.dart';
 import 'build_identity.dart';
 import 'destination.dart';
@@ -25,12 +28,14 @@ class AstroApp extends StatefulWidget {
     required this.content,
     required this.clock,
     this.nativeMoonWidget,
+    this.nativeReminders,
   });
   final AstronomyEngine engine;
   final Preferences preferences;
   final EditorialContent content;
   final DateTime Function() clock;
   final NativeMoonWidget? nativeMoonWidget;
+  final NativeReminders? nativeReminders;
 
   @override
   State<AstroApp> createState() => _AstroAppState();
@@ -74,8 +79,10 @@ class _AstroAppState extends State<AstroApp> {
           _selected = null;
         });
       };
-      _lifecycle = AppLifecycleListener(onResume: _refreshMoonWidget);
-      _refreshMoonWidget();
+    }
+    if (publisher != null || widget.nativeReminders != null) {
+      _lifecycle = AppLifecycleListener(onResume: _refreshNative);
+      _refreshNative();
     }
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (_selected == null) setState(() {});
@@ -114,6 +121,25 @@ class _AstroAppState extends State<AstroApp> {
     widget.nativeMoonWidget?.onOpenMoon = null;
     super.dispose();
   }
+
+  void _refreshNative() {
+    _refreshMoonWidget();
+    final reminders = widget.nativeReminders;
+    if (reminders != null) {
+      unawaited(
+        reminders.refresh(
+          widget.engine,
+          widget.clock(),
+          _reminderSettings,
+          _zone,
+        ),
+      );
+    }
+  }
+
+  ReminderSettings get _reminderSettings =>
+      ReminderSettings.decode(_preferences.text('reminders')) ??
+      const ReminderSettings();
 
   void _refreshMoonWidget() {
     final publisher = widget.nativeMoonWidget;
@@ -488,6 +514,14 @@ class _AstroAppState extends State<AstroApp> {
               },
             ),
     ),
+    if (widget.nativeReminders != null)
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.notifications_outlined),
+        title: const Text('Astronomy reminders'),
+        subtitle: Text(_reminderSettings.enabled ? 'On' : 'Off'),
+        onTap: () => _editReminderSettings(context),
+      ),
     ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.backup_outlined),
@@ -528,6 +562,32 @@ class _AstroAppState extends State<AstroApp> {
       ),
     ),
   ];
+
+  Future<void> _editReminderSettings(BuildContext context) async {
+    final scheduler = widget.nativeReminders!;
+    final settings = await showDialog<ReminderSettings>(
+      context: context,
+      builder: (context) => ReminderSettingsDialog(initial: _reminderSettings),
+    );
+    if (settings == null || !context.mounted) return;
+    if (settings.enabled && !await scheduler.requestPermission()) {
+      if (context.mounted) {
+        _settingsMessage(
+          context,
+          'Allow Astro Worker notifications in your system settings.',
+        );
+      }
+      return;
+    }
+    if (!context.mounted) return;
+    await _save(
+      context,
+      _preferences.writeText('reminders', settings.encode()),
+    );
+    if (!mounted) return;
+    setState(() {});
+    _refreshNative();
+  }
 
   Future<void> _exportSettings(BuildContext context) async {
     var includePersonal = false;
@@ -608,7 +668,7 @@ class _AstroAppState extends State<AstroApp> {
       if (!context.mounted) return;
       if (restored) {
         setState(_loadPreferences);
-        _refreshMoonWidget();
+        _refreshNative();
       }
       _settingsMessage(
         context,
@@ -654,7 +714,7 @@ class _AstroAppState extends State<AstroApp> {
           _loadPreferences();
           _selected = null;
         });
-        _refreshMoonWidget();
+        _refreshNative();
       }
       _settingsMessage(
         context,
@@ -802,7 +862,7 @@ class _AstroAppState extends State<AstroApp> {
       return;
     }
     setState(() => _zone = proposed);
-    _refreshMoonWidget();
+    _refreshNative();
     await _save(context, _preferences.writeText('zone', proposed));
   }
 }

@@ -15,9 +15,17 @@ class Preferences {
 
   static const _legacyPrefix = 'astro.v1.';
   static const _key = 'astro.v2.preferences';
-  static const _textKeys = {'theme', 'zone', 'zodiac', 'birth', 'observer'};
+  static const _textKeys = {
+    'theme',
+    'zone',
+    'zodiac',
+    'birth',
+    'observer',
+    'reminders',
+  };
   static const _flagKeys = {'spiritual', 'masters', 'south'};
   static const _personalKeys = {'birth', 'observer'};
+  static const _deviceKeys = {'reminders'};
   static const _keys = {..._textKeys, ..._flagKeys, 'orb'};
 
   static Future<Preferences> open() async {
@@ -68,7 +76,8 @@ class Preferences {
         'includesPersonal': includePersonal,
         'values': {
           for (final entry in _values.entries)
-            if (includePersonal || !_personalKeys.contains(entry.key))
+            if (!_deviceKeys.contains(entry.key) &&
+                (includePersonal || !_personalKeys.contains(entry.key)))
               entry.key: entry.value,
         },
       });
@@ -87,6 +96,7 @@ class Preferences {
       for (final entry in entries.entries) {
         final key = entry.key;
         if (key is! String ||
+            _deviceKeys.contains(key) ||
             (!includesPersonal && _personalKeys.contains(key))) {
           throw const FormatException('Unexpected personal data or setting.');
         }
@@ -99,6 +109,7 @@ class Preferences {
       return _queue(() async {
         if (!await _purgeLegacy()) return false;
         return _save({
+          for (final key in _deviceKeys) key: ?_values[key],
           if (!includesPersonal)
             for (final key in _personalKeys) key: ?_values[key],
           ...incoming,

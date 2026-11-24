@@ -64,6 +64,7 @@ jobs:
         if: matrix.target == 'Web'
         run: |
           scripts/check.sh
+          flutter test --platform chrome test/planetary_grid_test.dart
           scripts/build_web.sh --base-href /astro/
           node scripts/check_web_offline.mjs
           python3 scripts/audit_dart_licenses.py --bundle build/web/assets/NOTICES
