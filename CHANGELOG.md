@@ -18,3 +18,6 @@
 - Validate the full Android widget timeline before replacing cached data and ignore corrupt or expired snapshots. ([#12](https://github.com/repasscloud/astro-worker/issues/12))
 - Recover from malformed saved preference types and accept a legacy integer aspect orb. ([#25](https://github.com/repasscloud/astro-worker/issues/25))
 - Cross-check the 2025 seasonal events and sample solar and lunar eclipse timings against USNO and NASA references. ([#9](https://github.com/repasscloud/astro-worker/issues/9))
+- Show previous and upcoming tropical zodiac ingresses and direct and retrograde stations in planet details. ([#7](https://github.com/repasscloud/astro-worker/issues/7))
+- Add English and Spanish editorial editions with daily intentions, interpretations and offline language fallback. ([#11](https://github.com/repasscloud/astro-worker/issues/11))
+- Add a manual GitHub Actions workflow to validate Android, macOS, Web and Windows builds. ([#2](https://github.com/repasscloud/astro-worker/issues/2))

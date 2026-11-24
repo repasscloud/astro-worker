@@ -20,6 +20,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/content/en.v1.json
+    - assets/content/en.v2.json
+    - assets/content/es.v2.json
     - LICENSE
     - assets/legal/legacy-mit.txt

@@ -1,0 +1,66 @@
+name: Validate Android, macOS, Web, and Windows
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: Android
+            runner: ubuntu-latest
+          - target: Web
+            runner: ubuntu-latest
+          - target: macOS
+            runner: macos-latest
+          - target: Windows
+            runner: windows-latest
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read pinned Flutter version
+        id: sdk
+        run: printf 'version=%s\n' "$(cat .flutter-version)" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.sdk.outputs.version }}
+      - uses: actions/setup-java@v6
+        if: matrix.target == 'Android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v6
+        if: matrix.target == 'Web'
+        with:
+          node-version: '24'
+      - run: flutter pub get --enforce-lockfile
+      - name: Build Android and test widget timelines
+        if: matrix.target == 'Android'
+        run: |
+          flutter build apk --debug --no-pub
+          cd android
+          ./gradlew :app:testDebugUnitTest
+      - name: Run shared and packaged web checks
+        if: matrix.target == 'Web'
+        run: |
+          scripts/check.sh
+          scripts/build_web.sh --base-href /astro/
+          node scripts/check_web_offline.mjs
+      - name: Build macOS and run integration test
+        if: matrix.target == 'macOS'
+        run: |
+          flutter build macos --debug --no-pub
+          flutter test integration_test -d macos
+      - name: Build Windows
+        if: matrix.target == 'Windows'
+        run: flutter build windows --debug --no-pub

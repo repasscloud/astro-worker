@@ -33,3 +33,5 @@ show a development label.
 Before the first public release, move Unreleased changelog entries to
 `1.0.0` and commit them. Build and tag the exact release commit after the
 applicable channel clears the release gates.
+
+Use `gh workflow run validate-non-ios.yml --ref main` for an on-demand hosted validation of Android, macOS, Web and Windows. The workflow builds each target, runs the shared and packaged-web checks, runs Android widget timeline tests and runs the macOS integration test. Automatic validation stays paused.

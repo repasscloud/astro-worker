@@ -1,0 +1,112 @@
+{
+  "schema": 2,
+  "locale": "es",
+  "numbers": {
+    "1": {
+      "colour": "Brasa",
+      "rgb": "C15649",
+      "theme": "Iniciativa",
+      "affirmation": "Puedo dar un paso deliberado.",
+      "intention": "Dedica diez minutos a algo que has pospuesto.",
+      "interpretation": "La iniciativa invita a elegir un primer paso a tu alcance."
+    },
+    "2": {
+      "colour": "Perla",
+      "rgb": "D6CADC",
+      "theme": "Cooperación",
+      "affirmation": "Puedo escuchar antes de responder.",
+      "intention": "Pregunta qué facilitaría un plan compartido.",
+      "interpretation": "Cooperar implica escuchar y tomar decisiones en conjunto."
+    },
+    "3": {
+      "colour": "Caléndula",
+      "rgb": "E6AB54",
+      "theme": "Expresión",
+      "affirmation": "Puedo darme espacio para crear.",
+      "intention": "Escribe o crea algo pequeño por el gusto de hacerlo.",
+      "interpretation": "La expresión permite dar forma a tus ideas de un modo que te resulte propio."
+    },
+    "4": {
+      "colour": "Salvia",
+      "rgb": "8CA78E",
+      "theme": "Estructura",
+      "affirmation": "Las rutinas pequeñas me ayudan a avanzar.",
+      "intention": "Elige una rutina que simplifique el comienzo de mañana.",
+      "interpretation": "Una estructura sencilla puede dejar margen para la flexibilidad."
+    },
+    "5": {
+      "colour": "Verde azulado",
+      "rgb": "428F92",
+      "theme": "Cambio",
+      "affirmation": "Puedo mantener la curiosidad si cambian los planes.",
+      "intention": "Reserva un espacio para lo imprevisto.",
+      "interpretation": "El cambio invita a notar dónde sería útil ser flexible."
+    },
+    "6": {
+      "colour": "Rosa",
+      "rgb": "CB8C9F",
+      "theme": "Cuidado",
+      "affirmation": "Puedo cuidar y poner límites.",
+      "intention": "Reconoce lo que necesitas además de lo que puedes ofrecer.",
+      "interpretation": "Cuidar también puede significar reservar tiempo para tus necesidades."
+    },
+    "7": {
+      "colour": "Índigo",
+      "rgb": "676FA8",
+      "theme": "Reflexión",
+      "affirmation": "Puedo pensar con calma en lo que aprendí.",
+      "intention": "Presta atención a una experiencia de esta semana.",
+      "interpretation": "Reflexionar permite considerar cómo te afectó una experiencia."
+    },
+    "8": {
+      "colour": "Bronce",
+      "rgb": "A47654",
+      "theme": "Responsabilidad",
+      "affirmation": "Puedo usar mis recursos con intención.",
+      "intention": "Revisa un compromiso que implica tu tiempo o energía.",
+      "interpretation": "La responsabilidad puede empezar por usar tus recursos de acuerdo con tus compromisos."
+    },
+    "9": {
+      "colour": "Ciruela",
+      "rgb": "99658E",
+      "theme": "Cierre",
+      "affirmation": "Puedo terminar una cosa con atención.",
+      "intention": "Elige algo pendiente que puedas terminar o dejar de lado.",
+      "interpretation": "Cerrar una etapa también puede significar dejar ir una tarea."
+    },
+    "11": {
+      "colour": "Plata",
+      "rgb": "A4AEBE",
+      "theme": "Conciencia",
+      "affirmation": "Puedo observar mis pensamientos con paciencia.",
+      "intention": "Haz una pausa antes de quedarte con la primera interpretación.",
+      "interpretation": "La conciencia invita a observar sin buscar enseguida una explicación."
+    },
+    "22": {
+      "colour": "Jade",
+      "rgb": "589782",
+      "theme": "Práctica",
+      "affirmation": "Puedo convertir una idea en una acción concreta.",
+      "intention": "Divide una idea grande hasta encontrar un paso pequeño.",
+      "interpretation": "La práctica convierte una idea en una rutina a la que puedes volver."
+    },
+    "33": {
+      "colour": "Lavanda",
+      "rgb": "A397C9",
+      "theme": "Compasión",
+      "affirmation": "Puedo ofrecer amabilidad y respetar mis límites.",
+      "intention": "Piensa en una respuesta amable que también te cuide.",
+      "interpretation": "La compasión da espacio a la experiencia ajena y a la propia."
+    }
+  },
+  "prompts": [
+    "¿Qué merece un poco más de atención hoy?",
+    "¿Qué compromiso puedo hacer más pequeño y sencillo?",
+    "¿Qué noté cuando bajé el ritmo?",
+    "¿Dónde podría pedir una respuesta más clara?",
+    "¿Qué haría más fácil una tarea habitual?",
+    "¿Qué he hecho ya que quiero reconocer?",
+    "¿Qué opción tenía y no había considerado?",
+    "¿Cómo podría hacer tiempo para algo que disfruto?"
+  ]
+}

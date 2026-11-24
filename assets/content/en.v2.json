@@ -1,0 +1,112 @@
+{
+  "schema": 2,
+  "locale": "en",
+  "numbers": {
+    "1": {
+      "colour": "Ember",
+      "rgb": "C15649",
+      "theme": "Initiative",
+      "affirmation": "I can take one deliberate step.",
+      "intention": "Set aside ten minutes for a task you have been putting off.",
+      "interpretation": "Initiative is a prompt to choose a first step you can take today."
+    },
+    "2": {
+      "colour": "Pearl",
+      "rgb": "D6CADC",
+      "theme": "Cooperation",
+      "affirmation": "I can listen before I respond.",
+      "intention": "Ask someone what would make your shared plans easier.",
+      "interpretation": "Cooperation here means listening and making decisions together."
+    },
+    "3": {
+      "colour": "Marigold",
+      "rgb": "E6AB54",
+      "theme": "Expression",
+      "affirmation": "I give myself room to make something.",
+      "intention": "Make or write something small for the pleasure of it.",
+      "interpretation": "Expression is an invitation to make your ideas visible in a form that suits you."
+    },
+    "4": {
+      "colour": "Sage",
+      "rgb": "8CA78E",
+      "theme": "Structure",
+      "affirmation": "Small routines help me build steadily.",
+      "intention": "Choose one routine that would give tomorrow a simpler start.",
+      "interpretation": "Structure can offer enough predictability to make the rest of the day more flexible."
+    },
+    "5": {
+      "colour": "Teal",
+      "rgb": "428F92",
+      "theme": "Change",
+      "affirmation": "I can stay curious when plans change.",
+      "intention": "Leave some room for a change of plans.",
+      "interpretation": "Change is an invitation to notice where flexibility would help."
+    },
+    "6": {
+      "colour": "Rose",
+      "rgb": "CB8C9F",
+      "theme": "Care",
+      "affirmation": "Care can include a boundary.",
+      "intention": "Name one thing you need alongside what you can offer.",
+      "interpretation": "Care can include making time or space for your own needs."
+    },
+    "7": {
+      "colour": "Indigo",
+      "rgb": "676FA8",
+      "theme": "Reflection",
+      "affirmation": "I make space to consider what I have learned.",
+      "intention": "Give one experience from this week your undivided attention.",
+      "interpretation": "Reflection makes room to consider how an experience affected you."
+    },
+    "8": {
+      "colour": "Bronze",
+      "rgb": "A47654",
+      "theme": "Responsibility",
+      "affirmation": "I can use what I have with intention.",
+      "intention": "Check one promise you made about your time or energy.",
+      "interpretation": "Responsibility can start with using resources in line with your commitments."
+    },
+    "9": {
+      "colour": "Plum",
+      "rgb": "99658E",
+      "theme": "Completion",
+      "affirmation": "I can finish one thing with care.",
+      "intention": "Pick one loose end to finish or consciously set aside.",
+      "interpretation": "Completion can mean deciding an unfinished task no longer needs your attention."
+    },
+    "11": {
+      "colour": "Silver",
+      "rgb": "A4AEBE",
+      "theme": "Awareness",
+      "affirmation": "I can observe my thoughts with patience.",
+      "intention": "Pause before committing to your first interpretation of a situation.",
+      "interpretation": "Awareness invites you to observe without settling immediately on an explanation."
+    },
+    "22": {
+      "colour": "Jade",
+      "rgb": "589782",
+      "theme": "Practice",
+      "affirmation": "I can turn an idea into one practical action.",
+      "intention": "Break a larger idea into one action you can finish this week.",
+      "interpretation": "Practice is the way an idea becomes a routine you can return to."
+    },
+    "33": {
+      "colour": "Lavender",
+      "rgb": "A397C9",
+      "theme": "Compassion",
+      "affirmation": "I can offer kindness while respecting my limits.",
+      "intention": "Consider a kind response that honours your limits.",
+      "interpretation": "Compassion makes room for another person’s experience and your own."
+    }
+  },
+  "prompts": [
+    "What deserves a little more attention today?",
+    "Which commitment can I make smaller and easier to keep?",
+    "What did I notice when I slowed down?",
+    "Where could I ask for a clearer answer?",
+    "What would make a familiar task feel a little easier?",
+    "What have I already done that I want to acknowledge?",
+    "Where did I have a choice that I had overlooked?",
+    "How could I make time for something I enjoy?"
+  ]
+}

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -9,6 +10,7 @@ import '../domain/astronomy.dart';
 import '../domain/calendar_export.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
+import '../domain/planetary_events.dart';
 import '../domain/horizon.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/lunar_editorial.dart';
@@ -309,12 +311,32 @@ class Observatory extends StatelessWidget {
         '${position.sign()} ${position.zodiacPosition()} · ${position.motion}',
       ),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () => showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(titleCase(position.body.name)),
-          content: SingleChildScrollView(
-            child: Text(
+      onTap: () => _showPosition(context, position),
+    ),
+  );
+
+  Future<void> _showPosition(BuildContext context, CelestialPosition position) {
+    final provider = engine;
+    final body = position.body;
+    final motionEvents =
+        provider is PlanetaryEventEngine &&
+            body != Body.sun &&
+            body != Body.moon
+        ? compute(_planetaryEvents, (
+            provider as PlanetaryEventEngine,
+            body,
+            instant,
+          ))
+        : null;
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(titleCase(body.name)),
+        scrollable: true,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
               [
                 'Ecliptic longitude · ${position.longitude.toStringAsFixed(4)}°',
                 'Ecliptic latitude · ${position.latitude.toStringAsFixed(4)}°',
@@ -326,17 +348,76 @@ class Observatory extends StatelessWidget {
                 'Geocentric equinox and ecliptic of date',
               ].join('\n'),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
+            if (motionEvents != null)
+              FutureBuilder(
+                future: motionEvents,
+                builder: (context, state) {
+                  if (state.hasError) {
+                    return const Text('Planetary events unavailable.');
+                  }
+                  final events = state.data;
+                  if (events == null) {
+                    return const LinearProgressIndicator(
+                      semanticsLabel: 'Calculating events',
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      Semantics(
+                        header: true,
+                        child: const Text('Nearby planetary events'),
+                      ),
+                      for (final kind in PlanetaryEventKind.values) ...[
+                        if (events
+                                .where(
+                                  (event) =>
+                                      event.kind == kind &&
+                                      event.instant.isBefore(instant),
+                                )
+                                .lastOrNull
+                            case final previous?)
+                          _motionEvent(context, previous),
+                        if (events
+                                .where(
+                                  (event) =>
+                                      event.kind == kind &&
+                                      !event.instant.isBefore(instant),
+                                )
+                                .firstOrNull
+                            case final next?)
+                          _motionEvent(context, next),
+                      ],
+                      if (events.isEmpty)
+                        const Text('No events within 183 days.'),
+                    ],
+                  );
+                },
+              ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
-    ),
-  );
+    );
+  }
+
+  Widget _motionEvent(BuildContext context, PlanetaryEvent event) {
+    final label = switch (event.kind) {
+      PlanetaryEventKind.ingress =>
+        'Enters ${event.sign}${event.retrograde ? ' in retrograde' : ''}',
+      PlanetaryEventKind.stationDirect => 'Stations direct',
+      PlanetaryEventKind.stationRetrograde => 'Stations retrograde',
+    };
+    return Text(
+      '$label · ${formatMoment(context, inDisplayZone(event.instant, zone))}',
+    );
+  }
 
   List<Widget> _astrology(SkySnapshot snapshot) {
     final aspects = activeAspects(snapshot, orb);
@@ -412,7 +493,8 @@ class Observatory extends StatelessWidget {
           child: const SizedBox(width: 84, height: 44),
         ),
       ),
-      Text('Intention · ${daily.theme}'),
+      Text('Intention · ${daily.intention}'),
+      Text(daily.interpretation),
       Text(daily.affirmation),
       const Text(
         'Original editorial content selected by universal day number.',
@@ -742,5 +824,17 @@ class _ExportEventDialogState extends State<_ExportEventDialog> {
         child: const Text('Export .ics'),
       ),
     ],
+  );
+}
+
+List<PlanetaryEvent> _planetaryEvents(
+  (PlanetaryEventEngine, Body, DateTime) request,
+) {
+  final (engine, body, instant) = request;
+  const radius = Duration(days: 183);
+  return engine.planetaryEvents(
+    body,
+    instant.subtract(radius),
+    instant.add(radius),
   );
 }

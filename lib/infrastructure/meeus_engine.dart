@@ -16,6 +16,7 @@ import 'dart:math' as math;
 
 import '../domain/astronomy.dart';
 import '../domain/horizon.dart';
+import '../domain/planetary_events.dart';
 
 const _dayMs = 86400000;
 const _epoch = 2440587.5;
@@ -24,7 +25,8 @@ const _degrees = 180 / math.pi;
 
 /// UT is approximated by UTC. Delta T follows the NASA 2005–2050 polynomial
 /// and its adjacent intervals, documented in the calculation notes.
-class MeeusEngine implements AstronomyEngine, HorizonEngine {
+class MeeusEngine
+    implements AstronomyEngine, HorizonEngine, PlanetaryEventEngine {
   final _earth = planets.Planet(planets.planetEarth);
   final _planets = {
     Body.mercury: planets.Planet(planets.planetMercury),
@@ -100,6 +102,30 @@ class MeeusEngine implements AstronomyEngine, HorizonEngine {
     );
   }
 
+  double _longitudeSpeed(Body body, double jde) {
+    final before = _coordinates(body, jde - 0.01);
+    final after = _coordinates(body, jde + 0.01);
+    return signedAngle((after.lon - before.lon) * _degrees) / 0.02;
+  }
+
+  @override
+  List<PlanetaryEvent> planetaryEvents(
+    Body body,
+    DateTime from,
+    DateTime until,
+  ) {
+    if (!_planets.containsKey(body)) return [];
+    final lower = from.isBefore(start) ? start : from.toUtc();
+    final upper = until.isAfter(end) ? end : until.toUtc();
+    return solvePlanetaryEvents(lower, upper, (instant) {
+      final jde = utcJulianDay(instant) + _deltaT(instant) / 86400;
+      return (
+        longitude: normalize(_coordinates(body, jde).lon * _degrees),
+        speed: _longitudeSpeed(body, jde),
+      );
+    });
+  }
+
   @override
   SkySnapshot skyAt(DateTime instant) {
     if (instant.isBefore(start) || !instant.isBefore(end)) {
@@ -109,15 +135,13 @@ class MeeusEngine implements AstronomyEngine, HorizonEngine {
     final positions = <Body, CelestialPosition>{};
     for (final body in Body.values) {
       final at = _coordinates(body, jde);
-      final before = _coordinates(body, jde - 0.01);
-      final after = _coordinates(body, jde + 0.01);
       positions[body] = CelestialPosition(
         body: body,
         longitude: normalize(at.lon * _degrees),
         latitude: at.lat * _degrees,
         rightAscension: normalize(at.ra * _degrees),
         declination: at.dec * _degrees,
-        speed: signedAngle((after.lon - before.lon) * _degrees) / 0.02,
+        speed: _longitudeSpeed(body, jde),
         distanceKm: at.km,
       );
     }

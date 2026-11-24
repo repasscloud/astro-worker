@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:astro_worker/app/astro_app.dart';
 import 'package:astro_worker/app/build_identity.dart';
 import 'package:astro_worker/infrastructure/content.dart';
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
 import 'package:astro_worker/infrastructure/preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,25 +22,7 @@ void main() {
         'astro.v1.birth': '2000-02-29T00:00:00.000Z',
       });
       final preferences = await Preferences.open();
-      final messenger = tester.binding.defaultBinaryMessenger;
-      messenger.setMockMessageHandler('flutter/assets', (message) async {
-        expect(
-          utf8.decode(message!.buffer.asUint8List()),
-          'assets/content/en.v1.json',
-        );
-        return ByteData.sublistView(
-          utf8.encode(
-            '{"schema":1,"numbers":{"5":["Teal","428F92","Change","Stay curious."]},'
-            '"prompts":["What changed today?"]}',
-          ),
-        );
-      });
-      final EditorialContent content;
-      try {
-        content = await EditorialContent.load();
-      } finally {
-        messenger.setMockMessageHandler('flutter/assets', null);
-      }
+      final content = (await tester.runAsync(EditorialContent.load))!;
       await tester.pumpWidget(
         AstroApp(
           engine: MeeusEngine(),
@@ -89,6 +68,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(BuildIdentity.label), findsOneWidget);
       expect(find.text('© 2026 RePass Cloud · AGPL-3.0-only'), findsOneWidget);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Spiritual').first);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Spiritual content is disabled. Enable it in Settings.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Daily colour'), findsNothing);
     },
   );
 }

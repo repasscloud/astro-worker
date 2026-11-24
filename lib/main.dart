@@ -21,7 +21,9 @@ Future<void> main() async {
   });
   tz.initializeTimeZones();
   final preferences = await Preferences.open();
-  final content = await EditorialContent.load();
+  final content = await EditorialContent.load(
+    locale: PlatformDispatcher.instance.locale,
+  );
   runApp(
     AstroApp(
       engine: MeeusEngine(),
