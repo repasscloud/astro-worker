@@ -11,6 +11,7 @@ import '../features/observatory.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/preferences.dart';
 import 'branding.dart';
+import 'build_identity.dart';
 import 'destination.dart';
 
 class AstroApp extends StatefulWidget {
@@ -412,10 +413,21 @@ class _AstroAppState extends State<AstroApp> {
       contentPadding: EdgeInsets.zero,
       title: const Text('About and licences'),
       subtitle: const Text('Meeus / VSOP87 · 2000–2050 UTC · Tropical zodiac'),
-      onTap: () => showLicensePage(
+      onTap: () => showAboutDialog(
         context: context,
         applicationName: Branding.name,
-        applicationVersion: '0.1.0',
+        applicationVersion: BuildIdentity.label,
+        applicationLegalese: '© 2026 RePass Cloud · AGPL-3.0-only',
+        children: const [
+          SizedBox(height: 16),
+          Text('Public repository'),
+          SelectableText(BuildIdentity.repository),
+          if (BuildIdentity.hasRevision) ...[
+            SizedBox(height: 12),
+            Text('Corresponding source'),
+            SelectableText(BuildIdentity.source),
+          ],
+        ],
       ),
     ),
   ];

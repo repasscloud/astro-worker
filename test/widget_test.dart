@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:astro_worker/app/astro_app.dart';
+import 'package:astro_worker/app/build_identity.dart';
 import 'package:astro_worker/infrastructure/content.dart';
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
 import 'package:astro_worker/infrastructure/preferences.dart';
@@ -63,6 +64,13 @@ void main() {
       await tester.tap(find.text('Show spiritual content'));
       await tester.pumpAndSettle();
       expect(preferences.flag('spiritual'), isFalse);
+
+      final about = find.text('About and licences');
+      await tester.ensureVisible(about);
+      await tester.tap(about);
+      await tester.pumpAndSettle();
+      expect(find.text(BuildIdentity.label), findsOneWidget);
+      expect(find.text('© 2026 RePass Cloud · AGPL-3.0-only'), findsOneWidget);
     },
   );
 }

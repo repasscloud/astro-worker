@@ -7,7 +7,7 @@ See [setup](docs/development/setup.md), [product requirements](docs/product/requ
 ## Licence and distribution
 
 Copyright © 2026 RePass Cloud. Astro Worker is licensed under
-[AGPL-3.0-only](LICENSE). The [original MIT notice](notices/legacy-mit.txt)
+[AGPL-3.0-only](LICENSE). The [original MIT notice](assets/legal/legacy-mit.txt)
 is preserved for previously published material. Third-party components
 retain their respective licences. Product names, logos and trademarks
 identify official builds. Modified builds can use independent branding.

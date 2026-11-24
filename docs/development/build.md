@@ -17,3 +17,19 @@ Run macOS desktop validation locally with `scripts/check.sh`, `flutter build mac
 GitHub Actions validation is currently paused for every target. The workflow preserves the build matrix and verification steps as comments. The skipped placeholder keeps the workflow valid without allocating a runner. Run `scripts/check.sh` and the applicable target commands locally.
 
 For a local device smoke test, boot an iOS simulator or connect an Android test device, then use `flutter devices` to find its ID and run `flutter test integration_test -d DEVICE_ID`. For browser coverage, run `flutter test --platform chrome test`, then use the packaged web build to verify an offline reload over localhost.
+
+## Official build identity
+
+Use `scripts/build_release.sh TARGET PACKAGE_BUILD` from a clean checkout
+with the pinned Flutter version. Supported targets are `web`, `apk`,
+`appbundle`, `ipa`, `macos` and `windows`. Run Windows builds in a Bash
+environment on Windows. Choose a numeric counter appropriate for the
+platform. The wrapper embeds the version and Git revision and writes
+`build/release-TARGET.json` after a successful build. Publish that metadata
+alongside the matching package and verify the source link resolves publicly
+to the matching versioned source. Local builds made directly with Flutter
+show a development label.
+
+Before the first public release, move Unreleased changelog entries to
+`1.0.0` and commit them. Build and tag the exact release commit after the
+applicable channel clears the release gates.

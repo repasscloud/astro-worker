@@ -1,7 +1,7 @@
 name: astro_worker
 description: Offline astronomy and traditional daily practices from Sisters with Mirrors.
 publish_to: none
-version: 0.1.0+1
+version: 1.0.0+1
 environment:
   sdk: ^3.13.7
 dependencies:
@@ -20,3 +20,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/content/en.v1.json
+    - LICENSE
+    - assets/legal/legacy-mit.txt

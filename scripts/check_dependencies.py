@@ -11,4 +11,4 @@ extensions = {".se1", ".se2"}
 if restricted.search(lock) or any(
     path.suffix.lower() in extensions for path in (root / "assets").rglob("*")
 ):
-    sys.exit("Swiss Ephemeris dependencies or resources require distribution approval.")
+    sys.exit("Swiss Ephemeris dependencies or resources require a qualified binding, resource provenance and corresponding source.")
