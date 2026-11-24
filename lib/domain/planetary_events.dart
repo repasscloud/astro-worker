@@ -1,4 +1,6 @@
 import 'astronomy.dart';
+import 'event_refinement.dart';
+import 'zodiac.dart';
 
 enum PlanetaryEventKind { ingress, stationDirect, stationRetrograde }
 
@@ -15,8 +17,9 @@ abstract interface class PlanetaryEventEngine {
   List<PlanetaryEvent> planetaryEvents(
     Body body,
     DateTime from,
-    DateTime until,
-  );
+    DateTime until, {
+    Zodiac zodiac = Zodiac.tropical,
+  });
 }
 
 /// Search a bounded interval of apparent longitude. Split a sampling interval
@@ -48,7 +51,7 @@ List<PlanetaryEvent> solvePlanetaryEvents(
     final boundary = (sector + (forward ? 1 : 0)) * 30;
     final end = longitude + movement;
     if (forward ? end < boundary : end >= boundary) return;
-    final crossing = _bisect(left, right, (instant) {
+    final crossing = refineEvent(left, right, (instant) {
       final candidate =
           longitude + signedAngle(sample(instant).longitude - longitude);
       return forward ? candidate >= boundary : candidate < boundary;
@@ -72,7 +75,7 @@ List<PlanetaryEvent> solvePlanetaryEvents(
     if ((before.speed < 0) == retrograde) {
       scanIngress(left, right, before.longitude, after.longitude);
     } else {
-      final station = _bisect(
+      final station = refineEvent(
         left,
         right,
         (instant) => (sample(instant).speed < 0) == retrograde,
@@ -94,18 +97,4 @@ List<PlanetaryEvent> solvePlanetaryEvents(
     (left, before) = (right, after);
   }
   return events;
-}
-
-DateTime _bisect(DateTime left, DateTime right, bool Function(DateTime) after) {
-  while (right.difference(left) > const Duration(seconds: 1)) {
-    final mid = left.add(
-      Duration(microseconds: right.difference(left).inMicroseconds ~/ 2),
-    );
-    if (after(mid)) {
-      right = mid;
-    } else {
-      left = mid;
-    }
-  }
-  return right;
 }

@@ -1,4 +1,5 @@
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
+import 'package:astro_worker/domain/zodiac.dart';
 import 'package:astro_worker/platform/android_moon_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,6 +17,7 @@ void main() {
       keepMasterNumbers: true,
       south: true,
       showSpiritual: false,
+      zodiac: Zodiac.lahiri,
     ));
 
     expect(rows.first['nextPhase'], 'Full Moon');
@@ -23,6 +25,7 @@ void main() {
     expect(rows[1]['generatedAt'], rows.first['validUntil']);
     expect(rows[1]['nextPhase'], 'Last Quarter');
     expect(rows.first['south'], true);
+    expect(rows.first['zodiac'], 'lahiri');
     expect(rows.first['colourName'], 'Moonstone');
     expect(rows.every((row) => !row.containsKey('reflection')), true);
     expect(

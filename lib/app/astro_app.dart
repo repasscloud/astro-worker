@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../domain/astronomy.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
+import '../domain/zodiac.dart';
 import '../domain/horizon.dart';
 import '../features/observatory.dart';
 import '../infrastructure/content.dart';
@@ -49,6 +50,7 @@ class _AstroAppState extends State<AstroApp> {
   late bool _spiritual;
   late bool _masters;
   late bool _south;
+  late Zodiac _zodiac;
   late double _orb;
   DateTime? _birth;
   Observer? _observer;
@@ -71,6 +73,9 @@ class _AstroAppState extends State<AstroApp> {
     _spiritual = _preferences.flag('spiritual') ?? true;
     _masters = _preferences.flag('masters') ?? true;
     _south = _preferences.flag('south') ?? false;
+    _zodiac =
+        Zodiac.values.asNameMap()[_preferences.text('zodiac')] ??
+        Zodiac.tropical;
     _orb = (_preferences.decimal('orb') ?? 4).clamp(1, 10);
     _birth = DateTime.tryParse(_preferences.text('birth') ?? '');
     final location = _preferences.text('observer')?.split(',');
@@ -123,6 +128,7 @@ class _AstroAppState extends State<AstroApp> {
         _masters,
         south: _south,
         showSpiritual: _spiritual,
+        zodiac: _zodiac,
       ),
     );
   }
@@ -247,6 +253,7 @@ class _AstroAppState extends State<AstroApp> {
                             birth: _birth,
                             showSpiritual: _spiritual,
                             south: _south,
+                            zodiac: _zodiac,
                             orb: _orb,
                             observer: _observer,
                           ),
@@ -409,6 +416,23 @@ class _AstroAppState extends State<AstroApp> {
         unawaited(_save(context, _preferences.writeFlag('south', value)));
       },
     ),
+    DropdownButtonFormField<Zodiac>(
+      initialValue: _zodiac,
+      isExpanded: true,
+      decoration: const InputDecoration(labelText: 'Zodiac system'),
+      items: [
+        for (final zodiac in Zodiac.values)
+          DropdownMenuItem(value: zodiac, child: Text(zodiac.label)),
+      ],
+      onChanged: (zodiac) {
+        if (zodiac == null) return;
+        setState(() => _zodiac = zodiac);
+        _refreshMoonWidget();
+        unawaited(
+          _save(context, _preferences.writeText('zodiac', zodiac.name)),
+        );
+      },
+    ),
     Text('Major aspect orb · ${_orb.round()}°'),
     Slider(
       value: _orb,
@@ -467,7 +491,7 @@ class _AstroAppState extends State<AstroApp> {
     ListTile(
       contentPadding: EdgeInsets.zero,
       title: const Text('About and licences'),
-      subtitle: const Text('Meeus / VSOP87 · 2000–2050 UTC · Tropical zodiac'),
+      subtitle: Text('Meeus / VSOP87 · 2000–2050 UTC · ${_zodiac.label}'),
       onTap: () => showAboutDialog(
         context: context,
         applicationName: Branding.name,

@@ -21,3 +21,4 @@
 - Show previous and upcoming tropical zodiac ingresses and direct and retrograde stations in planet details. ([#7](https://github.com/repasscloud/astro-worker/issues/7))
 - Add English and Spanish editorial editions with daily intentions, interpretations and offline language fallback. ([#11](https://github.com/repasscloud/astro-worker/issues/11))
 - Add a manual GitHub Actions workflow to validate Android, macOS, Web and Windows builds. ([#2](https://github.com/repasscloud/astro-worker/issues/2))
+- Add a zodiac wheel, Lahiri and Fagan–Bradley settings, and exact major-aspect searches. Use the selected zodiac for sign labels, ingresses, and widget snapshots. ([#8](https://github.com/repasscloud/astro-worker/issues/8))

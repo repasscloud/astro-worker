@@ -9,6 +9,7 @@ import '../app/destination.dart';
 import '../domain/astronomy.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
+import '../domain/zodiac.dart';
 import '../infrastructure/lunar_editorial.dart';
 import 'widget_snapshot.dart';
 
@@ -46,6 +47,7 @@ class AndroidMoonWidget {
     bool keepMasterNumbers, {
     required bool south,
     required bool showSpiritual,
+    required Zodiac zodiac,
   }) async {
     final revision = ++_revision;
     final timeline = await compute(buildAndroidMoonTimeline, (
@@ -58,6 +60,7 @@ class AndroidMoonWidget {
       keepMasterNumbers: keepMasterNumbers,
       south: south,
       showSpiritual: showSpiritual,
+      zodiac: zodiac,
     ));
     if (revision != _revision) return;
     try {
@@ -77,12 +80,20 @@ List<Map<String, Object>> buildAndroidMoonTimeline(
     bool keepMasterNumbers,
     bool south,
     bool showSpiritual,
+    Zodiac zodiac,
   })
   request,
 ) {
   tz.initializeTimeZones();
-  final (:engine, :now, :zone, :keepMasterNumbers, :south, :showSpiritual) =
-      request;
+  final (
+    :engine,
+    :now,
+    :zone,
+    :keepMasterNumbers,
+    :south,
+    :showSpiritual,
+    :zodiac,
+  ) = request;
   final numerology = Numerology(keepMasterNumbers: keepMasterNumbers);
   const step = Duration(hours: 1);
   final snapshots = <Map<String, Object>>[];
@@ -116,6 +127,7 @@ List<Map<String, Object>> buildAndroidMoonTimeline(
         expiresAt: end,
         zone: zone,
         sky: sky,
+        zodiac: zodiac,
         universalDay: numerology.universalDay(inDisplayZone(start, zone)),
       ).toJson(),
       'waxing': sky.waxing,

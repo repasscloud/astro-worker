@@ -19,6 +19,7 @@ void main() {
       addTearDown(tester.view.resetPadding);
       SharedPreferences.setMockInitialValues({
         'astro.v1.zone': 'UTC',
+        'astro.v1.zodiac': 'lahiri',
         'astro.v1.birth': '2000-02-29T00:00:00.000Z',
       });
       final preferences = await Preferences.open();
@@ -42,6 +43,8 @@ void main() {
         find.textContaining('Northern Hemisphere convention'),
         findsOneWidget,
       );
+
+      expect(find.textContaining('Sidereal · Lahiri ·'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();

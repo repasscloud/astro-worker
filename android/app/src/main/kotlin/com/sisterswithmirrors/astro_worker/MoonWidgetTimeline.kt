@@ -20,6 +20,7 @@ internal class MoonWidgetTimeline private constructor(private val entries: List<
             "New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous",
             "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"
         )
+        private val zodiacs = setOf("tropical", "lahiri", "faganBradley")
         private val majorPhases = setOf("New Moon", "First Quarter", "Full Moon", "Last Quarter")
 
         fun parse(source: String): MoonWidgetTimeline? {
@@ -45,7 +46,7 @@ internal class MoonWidgetTimeline private constructor(private val entries: List<
             val entries = ArrayList<Entry>(array.length())
             for (index in 0 until array.length()) {
                 val entry = array.optJSONObject(index) ?: return null
-                if (entry.optInt("schema") != 1 || entry.optString("zodiac") != "tropical") return null
+                if (entry.optInt("schema") != 1 || entry.optString("zodiac") !in zodiacs) return null
                 val from = instant(entry.opt("generatedAt")) ?: return null
                 val until = instant(entry.opt("validUntil")) ?: return null
                 if (until - from !in 1..HOUR) return null

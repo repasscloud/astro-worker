@@ -11,11 +11,13 @@ import '../domain/calendar_export.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
 import '../domain/planetary_events.dart';
+import '../domain/zodiac.dart';
 import '../domain/horizon.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/lunar_editorial.dart';
 import '../platform/widget_snapshot.dart';
 import '../shared/moon_disc.dart';
+import '../shared/zodiac_wheel.dart';
 
 String titleCase(String value) => value[0].toUpperCase() + value.substring(1);
 
@@ -44,6 +46,7 @@ class Observatory extends StatelessWidget {
     required this.birth,
     required this.showSpiritual,
     required this.south,
+    this.zodiac = Zodiac.tropical,
     required this.orb,
     required this.observer,
   });
@@ -60,6 +63,8 @@ class Observatory extends StatelessWidget {
   final DateTime? birth;
   final bool showSpiritual;
   final bool south;
+  final Zodiac zodiac;
+  double get _zodiacOffset => zodiac.offset(instant);
   final double orb;
   final Observer? observer;
 
@@ -72,14 +77,14 @@ class Observatory extends StatelessWidget {
             Destination.today => _today(context, snapshot),
             Destination.moon => _moon(context, snapshot),
             Destination.planets => [
-              const Text('Apparent geocentric positions · tropical zodiac'),
+              Text('Apparent geocentric positions · ${zodiac.label}'),
               for (final position in snapshot.positions.values)
                 _positionCard(context, position),
               const Text(
                 'Pluto, Chiron and lunar nodes are awaiting provider verification.',
               ),
             ],
-            Destination.astrology => _astrology(snapshot),
+            Destination.astrology => _astrology(context, snapshot),
             Destination.widgets => _widgets(snapshot),
             _ => <Widget>[],
           };
@@ -133,7 +138,7 @@ class Observatory extends StatelessWidget {
             '${(snapshot.illumination * 100).toStringAsFixed(1)}% illuminated',
           ),
           Text(
-            'Tropical zodiac · Moon in ${moon.sign()} · Sun in ${sun.sign()}',
+            '${zodiac.label} · Moon in ${moon.sign(_zodiacOffset)} · Sun in ${sun.sign(_zodiacOffset)}',
           ),
         ],
       ),
@@ -201,7 +206,9 @@ class Observatory extends StatelessWidget {
             'Lunar age · ${age == null ? 'Outside available phase history' : '${age.toStringAsFixed(2)} days'}',
           ),
           Text('Distance · ${moon.distanceKm!.round()} km'),
-          Text('Tropical zodiac · ${moon.sign()} ${moon.zodiacPosition()}'),
+          Text(
+            '${zodiac.label} · ${moon.sign(_zodiacOffset)} ${moon.zodiacPosition(_zodiacOffset)}',
+          ),
           Text(
             'Schematic · ${south ? 'Southern' : 'Northern'} Hemisphere convention',
           ),
@@ -308,7 +315,7 @@ class Observatory extends StatelessWidget {
       leading: const Icon(Icons.radio_button_checked),
       title: Text(titleCase(position.body.name)),
       subtitle: Text(
-        '${position.sign()} ${position.zodiacPosition()} · ${position.motion}',
+        '${position.sign(_zodiacOffset)} ${position.zodiacPosition(_zodiacOffset)} · ${position.motion}',
       ),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => _showPosition(context, position),
@@ -326,6 +333,7 @@ class Observatory extends StatelessWidget {
             provider as PlanetaryEventEngine,
             body,
             instant,
+            zodiac,
           ))
         : null;
     return showDialog<void>(
@@ -419,16 +427,32 @@ class Observatory extends StatelessWidget {
     );
   }
 
-  List<Widget> _astrology(SkySnapshot snapshot) {
+  List<Widget> _astrology(BuildContext context, SkySnapshot snapshot) {
     final aspects = activeAspects(snapshot, orb);
     return [
-      const Text('Traditional astrology · Tropical zodiac'),
+      Text('Traditional astrology · ${zodiac.label}'),
+      _Panel(
+        title: 'Zodiac wheel',
+        children: [
+          ZodiacWheel(sky: snapshot, offset: _zodiacOffset, aspects: aspects),
+        ],
+      ),
       _Panel(
         title: 'Active major aspects',
         children: [
           if (aspects.isEmpty)
             const Text('No major aspects within the selected orb.'),
-          for (final aspect in aspects) Text(_aspectText(aspect)),
+          for (final aspect in aspects)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(_aspectText(aspect)),
+              trailing: engine is RelativeLongitudeEngine
+                  ? const Icon(Icons.chevron_right)
+                  : null,
+              onTap: engine is RelativeLongitudeEngine
+                  ? () => _showAspect(context, aspect)
+                  : null,
+            ),
         ],
       ),
       _Panel(
@@ -436,7 +460,7 @@ class Observatory extends StatelessWidget {
         children: [
           for (final position in snapshot.positions.values)
             Text(
-              '${titleCase(position.body.name)} · ${position.sign()} ${position.zodiacPosition()}',
+              '${titleCase(position.body.name)} · ${position.sign(_zodiacOffset)} ${position.zodiacPosition(_zodiacOffset)}',
             ),
         ],
       ),
@@ -445,6 +469,57 @@ class Observatory extends StatelessWidget {
 
   String _aspectText(ActiveAspect aspect) =>
       '${titleCase(aspect.first.name)} ${aspect.aspect.name} ${titleCase(aspect.second.name)} · ${aspect.orb.toStringAsFixed(1)}° · ${aspect.motion}';
+
+  Future<void> _showAspect(BuildContext context, ActiveAspect aspect) {
+    final provider = engine as RelativeLongitudeEngine;
+    final from = instant.subtract(const Duration(days: 7));
+    final until = instant.add(const Duration(days: 7));
+    final hits = compute(_exactHits, (
+      provider,
+      aspect,
+      from.isBefore(engine.start) ? engine.start : from,
+      until.isAfter(engine.end) ? engine.end : until,
+    ));
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        scrollable: true,
+        title: Text(_aspectText(aspect)),
+        content: FutureBuilder(
+          future: hits,
+          builder: (context, state) {
+            if (state.hasError) {
+              return const Text('Exact aspect times unavailable.');
+            }
+            final times = state.data;
+            if (times == null) {
+              return const LinearProgressIndicator(
+                semanticsLabel: 'Calculating exact aspects',
+              );
+            }
+            if (times.isEmpty) {
+              return const Text(
+                'No exact aspect in the seven days either side of this instant.',
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final time in times)
+                  Text(formatMoment(context, inDisplayZone(time, zone))),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 
   List<Widget> _numbers() {
     final date = birth;
@@ -514,6 +589,7 @@ class Observatory extends StatelessWidget {
     };
     final preview = WidgetSnapshot.fromSky(
       instant: instant,
+      zodiac: zodiac,
       expiresAt: instant.add(const Duration(minutes: 15)),
       zone: zone,
       sky: snapshot,
@@ -828,13 +904,26 @@ class _ExportEventDialogState extends State<_ExportEventDialog> {
 }
 
 List<PlanetaryEvent> _planetaryEvents(
-  (PlanetaryEventEngine, Body, DateTime) request,
+  (PlanetaryEventEngine, Body, DateTime, Zodiac) request,
 ) {
-  final (engine, body, instant) = request;
+  final (engine, body, instant, zodiac) = request;
   const radius = Duration(days: 183);
   return engine.planetaryEvents(
     body,
     instant.subtract(radius),
     instant.add(radius),
+    zodiac: zodiac,
+  );
+}
+
+List<DateTime> _exactHits(
+  (RelativeLongitudeEngine, ActiveAspect, DateTime, DateTime) request,
+) {
+  final (engine, aspect, from, until) = request;
+  return exactAspectHits(
+    from,
+    until,
+    aspect.aspect,
+    (instant) => engine.relativeLongitude(aspect.first, aspect.second, instant),
   );
 }

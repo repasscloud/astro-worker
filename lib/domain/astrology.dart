@@ -1,4 +1,5 @@
 import 'astronomy.dart';
+import 'event_refinement.dart';
 
 enum MajorAspect {
   conjunction(0),
@@ -29,10 +30,9 @@ List<ActiveAspect> activeAspects(SkySnapshot sky, double maxOrb) {
       for (final aspect in MajorAspect.values) {
         final orb = (delta.abs() - aspect.degrees).abs();
         if (orb > maxOrb) continue;
-        final futureDelta = signedAngle(
-          delta + (second.speed - first.speed) / 24,
-        );
-        final futureOrb = (futureDelta.abs() - aspect.degrees).abs();
+        final separationRate =
+            (second.speed - first.speed) * (delta < 0 ? -1 : 1);
+        final motion = (delta.abs() - aspect.degrees) * separationRate;
         aspects.add((
           first: first.body,
           second: second.body,
@@ -40,12 +40,63 @@ List<ActiveAspect> activeAspects(SkySnapshot sky, double maxOrb) {
           orb: orb,
           motion: orb < 0.001
               ? 'Exact'
-              : futureOrb < orb
+              : motion < 0
               ? 'Applying'
-              : 'Separating',
+              : motion > 0
+              ? 'Separating'
+              : 'Stationary',
         ));
       }
     }
   }
   return aspects..sort((a, b) => a.orb.compareTo(b.orb));
+}
+
+/// Find exact hits for one aspect and pair using a bounded UTC bracket search.
+/// Sample the signed phase of the pair, then test the appropriate branches of
+/// the aspect. The opposite side of a signed-angle wrapping is not a crossing.
+List<DateTime> exactAspectHits(
+  DateTime from,
+  DateTime until,
+  MajorAspect aspect,
+  double Function(DateTime) relativeLongitude,
+) {
+  final upper = until.toUtc();
+  var left = from.toUtc();
+  if (!left.isBefore(upper)) return [];
+  if (upper.difference(left) > const Duration(days: 14)) {
+    throw RangeError('Exact aspect queries support up to 14 days.');
+  }
+  const step = Duration(hours: 1);
+  final targets = [
+    aspect.degrees,
+    if (aspect != MajorAspect.conjunction && aspect != MajorAspect.opposition)
+      -aspect.degrees,
+  ];
+  final hits = <DateTime>{};
+  var before = relativeLongitude(left);
+  while (left.isBefore(upper)) {
+    final next = left.add(step);
+    final right = next.isBefore(upper) ? next : upper;
+    final after = relativeLongitude(right);
+    for (final target in targets) {
+      final a = signedAngle(before - target);
+      final b = signedAngle(after - target);
+      if (a == 0) hits.add(left);
+      if (b == 0 || (a.sign == b.sign) || (a - b).abs() >= 180) continue;
+      if (a == 0) continue;
+      final hit = refineEvent(
+        left,
+        right,
+        (instant) => signedAngle(relativeLongitude(instant) - target) * b >= 0,
+      );
+      if (hit.isBefore(upper)) hits.add(hit);
+    }
+    (left, before) = (right, after);
+  }
+  return hits.toList()..sort();
+}
+
+abstract interface class RelativeLongitudeEngine {
+  double relativeLongitude(Body first, Body second, DateTime instant);
 }

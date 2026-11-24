@@ -15,8 +15,10 @@ import 'package:astronomia/solstice.dart' as season;
 import 'dart:math' as math;
 
 import '../domain/astronomy.dart';
+import '../domain/astrology.dart';
 import '../domain/horizon.dart';
 import '../domain/planetary_events.dart';
+import '../domain/zodiac.dart';
 
 const _dayMs = 86400000;
 const _epoch = 2440587.5;
@@ -26,7 +28,11 @@ const _degrees = 180 / math.pi;
 /// UT is approximated by UTC. Delta T follows the NASA 2005–2050 polynomial
 /// and its adjacent intervals, documented in the calculation notes.
 class MeeusEngine
-    implements AstronomyEngine, HorizonEngine, PlanetaryEventEngine {
+    implements
+        AstronomyEngine,
+        HorizonEngine,
+        PlanetaryEventEngine,
+        RelativeLongitudeEngine {
   final _earth = planets.Planet(planets.planetEarth);
   final _planets = {
     Body.mercury: planets.Planet(planets.planetMercury),
@@ -112,18 +118,32 @@ class MeeusEngine
   List<PlanetaryEvent> planetaryEvents(
     Body body,
     DateTime from,
-    DateTime until,
-  ) {
+    DateTime until, {
+    Zodiac zodiac = Zodiac.tropical,
+  }) {
     if (!_planets.containsKey(body)) return [];
     final lower = from.isBefore(start) ? start : from.toUtc();
     final upper = until.isAfter(end) ? end : until.toUtc();
     return solvePlanetaryEvents(lower, upper, (instant) {
       final jde = utcJulianDay(instant) + _deltaT(instant) / 86400;
       return (
-        longitude: normalize(_coordinates(body, jde).lon * _degrees),
-        speed: _longitudeSpeed(body, jde),
+        longitude: normalize(
+          _coordinates(body, jde).lon * _degrees - zodiac.offset(instant),
+        ),
+        speed:
+            _longitudeSpeed(body, jde) -
+            (zodiac.offset(instant.add(const Duration(days: 1))) -
+                zodiac.offset(instant)),
       );
     });
+  }
+
+  @override
+  double relativeLongitude(Body first, Body second, DateTime instant) {
+    final jde = utcJulianDay(instant) + _deltaT(instant.toUtc()) / 86400;
+    return signedAngle(
+      (_coordinates(second, jde).lon - _coordinates(first, jde).lon) * _degrees,
+    );
   }
 
   @override
