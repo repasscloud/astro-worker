@@ -14,9 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Read Flutter version
+        id: sdk
+        shell: bash
+        run: printf 'version=%s\n' "$(cat .flutter-version)" >> "$GITHUB_OUTPUT"
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .flutter-version
+          flutter-version: ${{ steps.sdk.outputs.version }}
           cache: true
       - run: scripts/check.sh
       - run: flutter test --platform chrome test/astronomy_test.dart
@@ -50,9 +54,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Read Flutter version
+        id: sdk
+        shell: bash
+        run: printf 'version=%s\n' "$(cat .flutter-version)" >> "$GITHUB_OUTPUT"
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: .flutter-version
+          flutter-version: ${{ steps.sdk.outputs.version }}
           cache: true
       - run: flutter pub get --enforce-lockfile
       - run: ${{ matrix.command }}
