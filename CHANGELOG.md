@@ -16,3 +16,5 @@
 - Add a Chromium smoke test for web installability, offline startup, service-worker upgrades, and rollback. ([#17](https://github.com/repasscloud/astro-worker/issues/17))
 - Expose the current screen title as a heading for assistive technology and verify keyboard event selection at increased text scale. ([#23](https://github.com/repasscloud/astro-worker/issues/23))
 - Validate the full Android widget timeline before replacing cached data and ignore corrupt or expired snapshots. ([#12](https://github.com/repasscloud/astro-worker/issues/12))
+- Recover from malformed saved preference types and accept a legacy integer aspect orb. ([#25](https://github.com/repasscloud/astro-worker/issues/25))
+- Cross-check the 2025 seasonal events and sample solar and lunar eclipse timings against USNO and NASA references. ([#9](https://github.com/repasscloud/astro-worker/issues/9))

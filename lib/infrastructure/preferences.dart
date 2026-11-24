@@ -8,9 +8,18 @@ class Preferences {
       Preferences(await SharedPreferences.getInstance());
 
   static const _prefix = 'astro.v1.';
-  String? text(String key) => _store.getString('$_prefix$key');
-  bool? flag(String key) => _store.getBool('$_prefix$key');
-  double? decimal(String key) => _store.getDouble('$_prefix$key');
+  String? text(String key) => switch (_store.get('$_prefix$key')) {
+    final String value => value,
+    _ => null,
+  };
+  bool? flag(String key) => switch (_store.get('$_prefix$key')) {
+    final bool value => value,
+    _ => null,
+  };
+  double? decimal(String key) => switch (_store.get('$_prefix$key')) {
+    final num value when value.isFinite => value.toDouble(),
+    _ => null,
+  };
   Future<bool> writeText(String key, String value) =>
       _store.setString('$_prefix$key', value);
   Future<bool> writeFlag(String key, bool value) =>
