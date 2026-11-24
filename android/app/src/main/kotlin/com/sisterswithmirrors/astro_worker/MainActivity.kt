@@ -9,12 +9,14 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var observerLocation: ObserverLocation? = null
     private var widgetChannel: MethodChannel? = null
     private var remindersChannel: MethodChannel? = null
     private var permissionResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        observerLocation = ObserverLocation(this, flutterEngine.dartExecutor.binaryMessenger)
         remindersChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger, "astro_worker/reminders"
         ).also { channel ->
@@ -79,6 +81,7 @@ class MainActivity : FlutterActivity() {
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        observerLocation?.onPermissionsResult(requestCode)
         if (requestCode == REMINDER_PERMISSION) {
             permissionResult?.success(AstronomyReminders.canNotify(this))
             permissionResult = null
@@ -103,6 +106,8 @@ class MainActivity : FlutterActivity() {
         intent.getStringExtra(LunarWidgetProvider.TARGET) ?: "phase"
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        observerLocation?.dispose()
+        observerLocation = null
         widgetChannel?.setMethodCallHandler(null)
         widgetChannel = null
         remindersChannel?.setMethodCallHandler(null)

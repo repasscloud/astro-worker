@@ -5,15 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/astronomy.dart';
+import '../domain/birth_chart.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
 import '../domain/reminders.dart';
 import '../domain/zodiac.dart';
 import '../domain/horizon.dart';
 import '../features/observatory.dart';
+import '../features/birth_charts.dart';
+import '../features/observer_coordinates.dart';
 import '../features/reminder_settings.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/preferences.dart';
+import '../platform/device_observer_location.dart';
 import '../platform/native_moon_widget.dart';
 import '../platform/native_reminders.dart';
 import 'branding.dart';
@@ -29,6 +33,7 @@ class AstroApp extends StatefulWidget {
     required this.clock,
     this.nativeMoonWidget,
     this.nativeReminders,
+    this.deviceObserverLocation,
   });
   final AstronomyEngine engine;
   final Preferences preferences;
@@ -36,6 +41,7 @@ class AstroApp extends StatefulWidget {
   final DateTime Function() clock;
   final NativeMoonWidget? nativeMoonWidget;
   final NativeReminders? nativeReminders;
+  final DeviceObserverLocation? deviceObserverLocation;
 
   @override
   State<AstroApp> createState() => _AstroAppState();
@@ -59,6 +65,7 @@ class _AstroAppState extends State<AstroApp> {
   late Zodiac _zodiac;
   late double _orb;
   DateTime? _birth;
+  List<BirthProfile> _profiles = const [];
   Observer? _observer;
 
   Preferences get _preferences => widget.preferences;
@@ -111,6 +118,8 @@ class _AstroAppState extends State<AstroApp> {
       _preferences.text('birth'),
       widget.clock().toLocal(),
     );
+    _profiles =
+        BirthProfile.decodeList(_preferences.text('profiles')) ?? const [];
     _observer = Preferences.parseObserver(_preferences.text('observer'));
   }
 
@@ -240,7 +249,8 @@ class _AstroAppState extends State<AstroApp> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        if (_destination != Destination.settings) ...[
+                        if (_destination != Destination.settings &&
+                            _destination != Destination.birthCharts) ...[
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -263,6 +273,17 @@ class _AstroAppState extends State<AstroApp> {
                         ],
                         if (_destination == Destination.settings)
                           ..._settings(context)
+                        else if (_destination == Destination.birthCharts)
+                          BirthCharts(
+                            engine: widget.engine,
+                            zodiac: _zodiac,
+                            profiles: _profiles,
+                            clock: widget.clock,
+                            defaultZone: _zone == 'device' ? 'UTC' : _zone,
+                            defaultBirth: _birth,
+                            onSave: (profiles) =>
+                                _saveBirthProfiles(context, profiles),
+                          )
                         else
                           Observatory(
                             destination: _destination,
@@ -563,6 +584,33 @@ class _AstroAppState extends State<AstroApp> {
     ),
   ];
 
+  Future<bool> _saveBirthProfiles(
+    BuildContext context,
+    List<BirthProfile> profiles,
+  ) async {
+    try {
+      final saved = profiles.isEmpty
+          ? await _preferences.remove('profiles')
+          : await _preferences.writeText(
+              'profiles',
+              BirthProfile.encodeList(profiles),
+            );
+      if (context.mounted) {
+        if (saved) {
+          setState(() => _profiles = profiles);
+        } else {
+          _settingsMessage(context, 'Could not save the birth profiles.');
+        }
+      }
+      return saved;
+    } on Exception {
+      if (context.mounted) {
+        _settingsMessage(context, 'Could not save the birth profiles.');
+      }
+      return false;
+    }
+  }
+
   Future<void> _editReminderSettings(BuildContext context) async {
     final scheduler = widget.nativeReminders!;
     final settings = await showDialog<ReminderSettings>(
@@ -599,7 +647,7 @@ class _AstroAppState extends State<AstroApp> {
           scrollable: true,
           content: CheckboxListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Include birth date and observer coordinates'),
+            title: const Text('Include birth records and observer coordinates'),
             value: includePersonal,
             onChanged: (checked) =>
                 setDialogState(() => includePersonal = checked ?? false),
@@ -644,7 +692,7 @@ class _AstroAppState extends State<AstroApp> {
           ),
           minLines: 3,
           maxLines: 7,
-          maxLength: 8192,
+          maxLength: 32768,
           onChanged: (value) => input = value,
         ),
         actions: [
@@ -691,7 +739,7 @@ class _AstroAppState extends State<AstroApp> {
       builder: (context) => AlertDialog(
         title: const Text('Reset app settings?'),
         content: const Text(
-          'This clears preferences and removes the saved birth date and observer coordinates.',
+          'This clears preferences and removes saved birth records and observer coordinates.',
         ),
         actions: [
           TextButton(
@@ -732,96 +780,26 @@ class _AstroAppState extends State<AstroApp> {
           .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _editObserver(BuildContext context) async {
-    var latitude = _observer?.latitude.toString() ?? '';
-    var longitude = _observer?.longitude.toString() ?? '';
-    final decision = await showDialog<bool>(
+    final result = await showDialog<({Observer? observer})>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Observer coordinates'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                initialValue: latitude,
-                decoration: const InputDecoration(
-                  labelText: 'Latitude in degrees north',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  signed: true,
-                  decimal: true,
-                ),
-                onChanged: (value) => latitude = value.trim(),
-              ),
-              TextFormField(
-                initialValue: longitude,
-                decoration: const InputDecoration(
-                  labelText: 'Longitude in degrees east',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  signed: true,
-                  decimal: true,
-                ),
-                onChanged: (value) => longitude = value.trim(),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          if (_observer != null)
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Clear'),
-            ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
+      builder: (context) => ObserverCoordinatesDialog(
+        observer: _observer,
+        deviceLocation: widget.deviceObserverLocation,
       ),
     );
-    if (decision == null || !context.mounted) return;
-    if (!decision) {
-      final removed = await _preferences.remove('observer');
-      if (!context.mounted) return;
-      if (removed) {
-        setState(() => _observer = null);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('The saved coordinates could not be cleared.'),
-          ),
-        );
-      }
-      return;
-    }
-    try {
-      final observer = Observer(
-        latitude: double.parse(latitude),
-        longitude: double.parse(longitude),
-      );
+    if (result == null || !context.mounted) return;
+    final observer = result.observer;
+    final saved = observer == null
+        ? await _preferences.remove('observer')
+        : await _preferences.writeText(
+            'observer',
+            '${observer.latitude},${observer.longitude}',
+          );
+    if (!context.mounted) return;
+    if (saved) {
       setState(() => _observer = observer);
-      await _save(
-        context,
-        _preferences.writeText(
-          'observer',
-          '${observer.latitude},${observer.longitude}',
-        ),
-      );
-    } on FormatException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Enter latitude from −90 to 90 and longitude from −180 to 180.',
-            ),
-          ),
-        );
-      }
+    } else {
+      _settingsMessage(context, 'Could not change the saved coordinates.');
     }
   }
 

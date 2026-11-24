@@ -7,6 +7,7 @@ import 'app/astro_app.dart';
 import 'infrastructure/content.dart';
 import 'infrastructure/meeus_engine.dart';
 import 'infrastructure/preferences.dart';
+import 'platform/device_observer_location.dart';
 import 'platform/native_moon_widget.dart';
 import 'platform/native_reminders.dart';
 
@@ -31,6 +32,10 @@ Future<void> main() async {
       preferences: preferences,
       content: content,
       clock: DateTime.now,
+      deviceObserverLocation:
+          !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+          ? DeviceObserverLocation()
+          : null,
       nativeReminders:
           !kIsWeb &&
               (defaultTargetPlatform == TargetPlatform.android ||

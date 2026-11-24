@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../domain/birth_chart.dart';
 import '../domain/horizon.dart';
 import '../domain/zodiac.dart';
 
@@ -22,9 +23,10 @@ class Preferences {
     'birth',
     'observer',
     'reminders',
+    'profiles',
   };
   static const _flagKeys = {'spiritual', 'masters', 'south'};
-  static const _personalKeys = {'birth', 'observer'};
+  static const _personalKeys = {'birth', 'observer', 'profiles'};
   static const _deviceKeys = {'reminders'};
   static const _keys = {..._textKeys, ..._flagKeys, 'orb'};
 
@@ -83,7 +85,7 @@ class Preferences {
       });
 
   Future<bool> restoreBackup(String backup, {required DateTime now}) {
-    if (backup.length > 8192) {
+    if (backup.length > 32768) {
       throw const FormatException('Backup is too large.');
     }
     final decoded = jsonDecode(backup);
@@ -182,6 +184,7 @@ class Preferences {
         'orb' => (value as double) >= 1 && value <= 10,
         'birth' => parseBirthDate(value as String, now) != null,
         'observer' => parseObserver(value as String) != null,
+        'profiles' => BirthProfile.decodeList(value as String) != null,
         _ => true,
       };
 

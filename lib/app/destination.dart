@@ -6,6 +6,7 @@ enum Destination {
   planets('Planets', Icons.public),
   calendar('Calendar', Icons.calendar_month_outlined),
   astrology('Astrology', Icons.explore_outlined),
+  birthCharts('Birth charts', Icons.person_outline),
   numerology('Numerology', Icons.numbers),
   spiritual('Spiritual', Icons.spa_outlined),
   widgets('Widgets', Icons.widgets_outlined),

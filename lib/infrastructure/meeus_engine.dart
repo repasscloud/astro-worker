@@ -16,6 +16,7 @@ import 'dart:math' as math;
 
 import '../domain/astronomy.dart';
 import '../domain/astrology.dart';
+import '../domain/birth_chart.dart';
 import '../domain/horizon.dart';
 import '../domain/lunar_observation.dart';
 import '../domain/planetary_events.dart';
@@ -34,7 +35,8 @@ class MeeusEngine
         HorizonEngine,
         PlanetaryEventEngine,
         RelativeLongitudeEngine,
-        LunarOrientationEngine {
+        LunarOrientationEngine,
+        BirthAngleEngine {
   final _earth = planets.Planet(planets.planetEarth);
   final _planets = {
     Body.mercury: planets.Planet(planets.planetMercury),
@@ -150,6 +152,18 @@ class MeeusEngine
 
   static double _greenwichSidereal(double julianDay) =>
       sidereal.apparent(julianDay) * 2 * math.pi / 86400;
+
+  @override
+  double? ascendant(DateTime instant, Observer location) {
+    final jd = utcJulianDay(instant);
+    final jde = jd + _deltaT(instant.toUtc()) / 86400;
+    final obliquity = nut.meanObliquity(jde) + nut.nutation(jde).dEps;
+    return easternHorizonLongitude(
+      _greenwichSidereal(jd) + location.longitude / _degrees,
+      obliquity,
+      location,
+    );
+  }
 
   @override
   double? lunarRotation(DateTime instant, SkySnapshot sky, Observer observer) {

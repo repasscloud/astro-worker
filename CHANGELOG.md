@@ -29,3 +29,5 @@
 - Record the Windows Widgets Board packaging path and the Windows 11 host checks still required. ([#16](https://github.com/repasscloud/astro-worker/issues/16))
 - Add opt-in Android and macOS reminders for lunar and seasonal events, with advance timing, quiet hours, and rolling local scheduling. ([#18](https://github.com/repasscloud/astro-worker/issues/18))
 - Validate Sun, Moon and seven planetary positions against JPL Horizons samples at the supported range boundaries and a midpoint. ([#3](https://github.com/repasscloud/astro-worker/issues/3))
+- Add opt-in Android GPS lookup for observer coordinates, with manual entry and local confirmation. ([#5](https://github.com/repasscloud/astro-worker/issues/5))
+- Add private birth profiles, date-only sign previews, and known-time natal charts with Whole Sign or Equal houses. ([#20](https://github.com/repasscloud/astro-worker/issues/20), [#21](https://github.com/repasscloud/astro-worker/issues/21))

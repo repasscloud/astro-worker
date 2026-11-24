@@ -1,0 +1,7 @@
+# Birth charts and house conventions
+
+A local profile can include a birth date, an IANA timezone, a birth time, and observer coordinates. Unknown birth time is explicit. The date-only view shows sign labels from samples across the local birth day and marks signs that differ. The app omits degrees, angles, and houses in that view. Wall times skipped by daylight saving are rejected. Repeated times use the earlier UTC instant, consistent with the observatory. Dates outside the ephemeris range can be saved and display the range limitation.
+
+With a known time and usable coordinates, the ascendant is the eastern intersection of the apparent ecliptic and observer horizon. The chart suppresses it at geographical poles or a degenerate intersection. Whole sign starts house one at the beginning of the rising sign. Equal houses start at the ascendant degree. Both then divide the zodiac into 30° sectors. For an ascendant of 347°, the first two whole-sign cusps are 330° and 0°. The first two equal cusps are 347° and 17°.
+
+Porphyry divides the four ecliptic quadrants set by the angles. Placidus and Koch use time-based constructions with high-latitude limits. Campanus and Regiomontanus divide a reference great circle and project the divisions onto the ecliptic. Their cusps differ from equal and whole-sign houses and need dedicated latitude and reference-chart checks before exposing them in the app. [House method reference](https://www.astro.com/swisseph-download/doc/swissephprg.pdf)
