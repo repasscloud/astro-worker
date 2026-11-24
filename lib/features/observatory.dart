@@ -13,6 +13,7 @@ import '../domain/numerology.dart';
 import '../domain/planetary_events.dart';
 import '../domain/zodiac.dart';
 import '../domain/horizon.dart';
+import '../domain/lunar_observation.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/lunar_editorial.dart';
 import '../platform/widget_snapshot.dart';
@@ -181,12 +182,19 @@ class Observatory extends StatelessWidget {
     final moon = snapshot.positions[Body.moon]!;
     final editorial = lunarEditorial(snapshot.phase);
     final age = snapshot.lunarAgeDays;
-    final nearby = engine
-        .events(
-          instant.subtract(const Duration(days: 31)),
-          instant.add(const Duration(days: 31)),
-        )
-        .where((event) => event.category == EventCategory.moonPhase);
+    final location = observer;
+    final provider = engine;
+    final rotation = location != null && provider is LunarOrientationEngine
+        ? (provider as LunarOrientationEngine).lunarRotation(
+            instant,
+            snapshot,
+            location,
+          )
+        : null;
+    final nearby = engine.events(
+      instant.subtract(const Duration(days: 31)),
+      instant.add(const Duration(days: 31)),
+    );
     final panels = <MoonSection, Widget>{
       MoonSection.phase: _Panel(
         title: snapshot.phase,
@@ -197,6 +205,7 @@ class Observatory extends StatelessWidget {
               illumination: snapshot.illumination,
               waxing: snapshot.waxing,
               south: south,
+              rotation: rotation,
             ),
           ),
           Text(
@@ -210,9 +219,10 @@ class Observatory extends StatelessWidget {
             '${zodiac.label} · ${moon.sign(_zodiacOffset)} ${moon.zodiacPosition(_zodiacOffset)}',
           ),
           Text(
-            'Schematic · ${south ? 'Southern' : 'Northern'} Hemisphere convention',
+            rotation == null
+                ? 'Schematic · ${south ? 'Southern' : 'Northern'} Hemisphere convention'
+                : 'Approximate orientation relative to the local horizon',
           ),
-          const Text('Observer-dependent orientation is pending.'),
         ],
       ),
       if (showSpiritual || moonSection == MoonSection.reflection)
@@ -231,7 +241,10 @@ class Observatory extends StatelessWidget {
       MoonSection.calendar: _Panel(
         title: 'Previous and upcoming lunar phases',
         children: [
-          for (final event in nearby) _eventTile(context, event, zone),
+          for (final event in nearby.where(
+            (event) => event.category == EventCategory.moonPhase,
+          ))
+            _eventTile(context, event, zone),
         ],
       ),
     };
@@ -246,7 +259,107 @@ class Observatory extends StatelessWidget {
         ?panels[section],
       _horizon(context, lunar: true),
       ?panels[MoonSection.calendar],
+      _Panel(
+        title: 'Lunar perigee and apogee',
+        children: [
+          for (final event in nearby.where(
+            (event) => event.category == EventCategory.apsis,
+          ))
+            _eventTile(context, event, zone),
+        ],
+      ),
+      if (showSpiritual &&
+          provider is PlanetaryEventEngine &&
+          provider is RelativeLongitudeEngine)
+        _Panel(
+          title: 'Traditional lunar astrology',
+          children: [
+            OutlinedButton(
+              onPressed: () => _showVoidOfCourse(
+                context,
+                provider as PlanetaryEventEngine,
+                provider as RelativeLongitudeEngine,
+              ),
+              child: const Text('Void-of-course window'),
+            ),
+          ],
+        ),
     ];
+  }
+
+  Future<void> _showVoidOfCourse(
+    BuildContext context,
+    PlanetaryEventEngine ingresses,
+    RelativeLongitudeEngine positions,
+  ) {
+    var rule = VoidOfCourseRule.classical;
+    Future<VoidOfCourseWindow?> calculate(VoidOfCourseRule choice) =>
+        compute(_voidWindow, (instant, zodiac, choice, ingresses, positions));
+    var window = calculate(rule);
+    return showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Void of course · Traditional'),
+          scrollable: true,
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'From the last exact major lunar aspect to the next zodiac sign.',
+              ),
+              DropdownButtonFormField<VoidOfCourseRule>(
+                initialValue: rule,
+                decoration: const InputDecoration(
+                  labelText: 'Bodies to include',
+                ),
+                isExpanded: true,
+                items: [
+                  for (final choice in VoidOfCourseRule.values)
+                    DropdownMenuItem(value: choice, child: Text(choice.label)),
+                ],
+                onChanged: (choice) {
+                  if (choice == null) return;
+                  setDialogState(() {
+                    rule = choice;
+                    window = calculate(choice);
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              FutureBuilder(
+                future: window,
+                builder: (context, state) {
+                  if (state.connectionState != ConnectionState.done) {
+                    return const LinearProgressIndicator(
+                      semanticsLabel: 'Calculating lunar window',
+                    );
+                  }
+                  final result = state.data;
+                  if (result == null) {
+                    return const Text('Window unavailable for this instant.');
+                  }
+                  return Text(
+                    [
+                      if (result.sign case final sign?)
+                        'Moon in $sign · ${zodiac.label}',
+                      'Starts · ${formatMoment(context, inDisplayZone(result.start, zone))}',
+                      'Ends · ${formatMoment(context, inDisplayZone(result.end, zone))}',
+                    ].join('\n'),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _horizon(BuildContext context, {required bool lunar}) {
@@ -925,5 +1038,25 @@ List<DateTime> _exactHits(
     until,
     aspect.aspect,
     (instant) => engine.relativeLongitude(aspect.first, aspect.second, instant),
+  );
+}
+
+VoidOfCourseWindow? _voidWindow(
+  (
+    DateTime,
+    Zodiac,
+    VoidOfCourseRule,
+    PlanetaryEventEngine,
+    RelativeLongitudeEngine,
+  )
+  request,
+) {
+  final (instant, zodiac, rule, ingresses, positions) = request;
+  return lunarVoidOfCourse(
+    instant: instant,
+    zodiac: zodiac,
+    rule: rule,
+    ingresses: ingresses,
+    positions: positions,
   );
 }

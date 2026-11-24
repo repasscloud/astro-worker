@@ -22,3 +22,5 @@
 - Add English and Spanish editorial editions with daily intentions, interpretations and offline language fallback. ([#11](https://github.com/repasscloud/astro-worker/issues/11))
 - Add a manual GitHub Actions workflow to validate Android, macOS, Web and Windows builds. ([#2](https://github.com/repasscloud/astro-worker/issues/2))
 - Add a zodiac wheel, Lahiri and Fagan–Bradley settings, and exact major-aspect searches. Use the selected zodiac for sign labels, ingresses, and widget snapshots. ([#8](https://github.com/repasscloud/astro-worker/issues/8))
+- Audit licence evidence for every locked Dart package and verify dependency notices are available from the app offline. ([#41](https://github.com/repasscloud/astro-worker/issues/41), [#42](https://github.com/repasscloud/astro-worker/issues/42))
+- Show lunar apsides, approximate observer-oriented Moon artwork, and a separately labelled traditional void-of-course window with two body sets. ([#6](https://github.com/repasscloud/astro-worker/issues/6))

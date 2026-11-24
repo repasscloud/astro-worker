@@ -8,27 +8,30 @@ class MoonDisc extends StatelessWidget {
     required this.illumination,
     required this.waxing,
     this.south = false,
+    this.rotation,
   });
   final double illumination;
   final bool waxing;
   final bool south;
+  final double? rotation;
 
   @override
   Widget build(BuildContext context) => Semantics(
     image: true,
     label:
-        'Schematic lunar disc, ${(illumination * 100).round()} percent illuminated',
+        '${rotation != null ? 'Observer-oriented' : 'Schematic'} lunar disc, ${(illumination * 100).round()} percent illuminated',
     child: CustomPaint(
       size: const Size.square(140),
-      painter: _LunarPainter(illumination, waxing != south),
+      painter: _LunarPainter(illumination, waxing != south, rotation),
     ),
   );
 }
 
 class _LunarPainter extends CustomPainter {
-  _LunarPainter(this.light, this.right);
+  _LunarPainter(this.light, this.right, this.rotation);
   final double light;
   final bool right;
+  final double? rotation;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -36,7 +39,11 @@ class _LunarPainter extends CustomPainter {
     final center = size.center(Offset.zero);
     canvas.save();
     canvas.translate(center.dx, center.dy);
-    if (!right) canvas.scale(-1, 1);
+    if (rotation case final angle?) {
+      canvas.rotate(angle);
+    } else if (!right) {
+      canvas.scale(-1, 1);
+    }
     canvas.drawCircle(
       Offset.zero,
       radius,
@@ -68,5 +75,7 @@ class _LunarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_LunarPainter oldDelegate) =>
-      oldDelegate.light != light || oldDelegate.right != right;
+      oldDelegate.light != light ||
+      oldDelegate.right != right ||
+      oldDelegate.rotation != rotation;
 }

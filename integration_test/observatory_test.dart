@@ -1,4 +1,5 @@
 import 'package:astro_worker/main.dart' as app;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -20,6 +21,14 @@ void main() {
       expect(
         await rootBundle.loadString('assets/legal/legacy-mit.txt'),
         contains('Copyright (c) 2026 RePass Cloud'),
+      );
+
+      final packages = await LicenseRegistry.licenses
+          .expand((entry) => entry.packages)
+          .toSet();
+      expect(
+        packages,
+        containsAll(['Astro Worker', 'Astro Worker (original MIT notice)']),
       );
     },
   );

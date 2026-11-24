@@ -17,6 +17,7 @@ import 'dart:math' as math;
 import '../domain/astronomy.dart';
 import '../domain/astrology.dart';
 import '../domain/horizon.dart';
+import '../domain/lunar_observation.dart';
 import '../domain/planetary_events.dart';
 import '../domain/zodiac.dart';
 
@@ -32,7 +33,8 @@ class MeeusEngine
         AstronomyEngine,
         HorizonEngine,
         PlanetaryEventEngine,
-        RelativeLongitudeEngine {
+        RelativeLongitudeEngine,
+        LunarOrientationEngine {
   final _earth = planets.Planet(planets.planetEarth);
   final _planets = {
     Body.mercury: planets.Planet(planets.planetMercury),
@@ -121,7 +123,7 @@ class MeeusEngine
     DateTime until, {
     Zodiac zodiac = Zodiac.tropical,
   }) {
-    if (!_planets.containsKey(body)) return [];
+    if (body == Body.sun) return [];
     final lower = from.isBefore(start) ? start : from.toUtc();
     final upper = until.isAfter(end) ? end : until.toUtc();
     return solvePlanetaryEvents(lower, upper, (instant) {
@@ -143,6 +145,22 @@ class MeeusEngine
     final jde = utcJulianDay(instant) + _deltaT(instant.toUtc()) / 86400;
     return signedAngle(
       (_coordinates(second, jde).lon - _coordinates(first, jde).lon) * _degrees,
+    );
+  }
+
+  static double _greenwichSidereal(double julianDay) =>
+      sidereal.apparent(julianDay) * 2 * math.pi / 86400;
+
+  @override
+  double? lunarRotation(DateTime instant, SkySnapshot sky, Observer observer) {
+    final localSidereal =
+        _greenwichSidereal(utcJulianDay(instant)) +
+        observer.longitude / _degrees;
+    return lunarRotationForObserver(
+      sky.positions[Body.sun]!,
+      sky.positions[Body.moon]!,
+      localSidereal,
+      observer,
     );
   }
 
@@ -200,7 +218,7 @@ class MeeusEngine
       final jde = jd + _deltaT(instant) / 86400;
       final sun = _coordinates(Body.sun, jde);
       final lunar = _coordinates(Body.moon, jde);
-      final greenwich = sidereal.apparent(jd) * 2 * math.pi / 86400;
+      final greenwich = _greenwichSidereal(jd);
       final latitude = observer.latitude / _degrees;
       final longitudeWest = -observer.longitude / _degrees;
       final sunAltitude = coord
