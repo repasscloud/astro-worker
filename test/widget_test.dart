@@ -20,7 +20,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPadding);
-      SharedPreferences.setMockInitialValues({'astro.v1.zone': 'UTC'});
+      SharedPreferences.setMockInitialValues({
+        'astro.v1.zone': 'UTC',
+        'astro.v1.birth': '2000-02-29T00:00:00.000Z',
+      });
       final preferences = await Preferences.open();
       final messenger = tester.binding.defaultBinaryMessenger;
       messenger.setMockMessageHandler('flutter/assets', (message) async {
@@ -68,6 +71,17 @@ void main() {
       await tester.tap(find.text('Show spiritual content'));
       await tester.pumpAndSettle();
       expect(preferences.flag('spiritual'), isFalse);
+
+      await tester.tap(find.text('Keep master numbers 11, 22 and 33'));
+      await tester.pumpAndSettle();
+      expect((await Preferences.open()).flag('masters'), isFalse);
+
+      final clearBirth = find.byTooltip('Clear birth date');
+      await tester.ensureVisible(clearBirth);
+      await tester.tap(clearBirth);
+      await tester.pumpAndSettle();
+      expect((await Preferences.open()).text('birth'), isNull);
+      expect(find.byTooltip('Clear birth date'), findsNothing);
 
       final about = find.text('About and licences');
       await tester.ensureVisible(about);

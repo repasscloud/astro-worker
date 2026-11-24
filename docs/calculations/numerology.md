@@ -4,4 +4,6 @@ Reduce a value by adding its digits until it is a single digit, or retain 11, 22
 
 The personal year reduces the universal year plus reduced birth month and birth day. Add civil month and day at successive stages to find the personal month and day. The life path reduces year, month and day individually before reducing their sum. The birthday number is the reduced birth day. These are explicit choices among numerology conventions.
 
+For a 29 February 2000 birth date, the life path is 6. For 2 February 2025, the personal year is 22 with master numbers enabled (9 + 2 + 11), and 4 with them disabled (9 + 2 + 2, then reduce 13). Both settings give personal month 6 and personal day 8. A leap-day birth date remains the original civil date, including in years without 29 February.
+
 English content is in a schema-versioned JSON bundle. Universal day selects its colour, affirmation and theme, including entries for master numbers. Gregorian civil-day index modulo the number of prompts selects the reflection prompt. The theme is also used as the daily intention. Text is original editorial content.

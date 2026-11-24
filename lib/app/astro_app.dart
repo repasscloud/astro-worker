@@ -202,9 +202,12 @@ class _AstroAppState extends State<AstroApp> {
                           : ValueKey(_widgetOpenCount),
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                       children: [
-                        Text(
-                          _destination.label,
-                          style: Theme.of(context).textTheme.headlineLarge,
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            _destination.label,
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         if (_destination != Destination.settings) ...[

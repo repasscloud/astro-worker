@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../app/destination.dart';
 import '../domain/astrology.dart';
 import '../domain/astronomy.dart';
+import '../domain/calendar_export.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
 import '../domain/horizon.dart';
@@ -489,6 +493,69 @@ class CalendarPanel extends StatefulWidget {
 class _CalendarPanelState extends State<CalendarPanel> {
   CalendarSpan _span = CalendarSpan.month;
   final _categories = EventCategory.values.toSet();
+  bool _exporting = false;
+  (AstronomyEngine, DateTime, DateTime, String)? _eventRange;
+  List<SkyEvent> _rangeEvents = const [];
+
+  List<SkyEvent> _eventsInRange(DateTime start, DateTime end) {
+    final range = (widget.engine, start, end, widget.zone);
+    if (_eventRange != range) {
+      _rangeEvents = widget.engine
+          .events(
+            start.subtract(const Duration(days: 1)),
+            end.add(const Duration(days: 1)),
+          )
+          .where((event) {
+            final local = inDisplayZone(event.instant, widget.zone);
+            final date = DateTime.utc(local.year, local.month, local.day);
+            return !date.isBefore(start) && date.isBefore(end);
+          })
+          .toList();
+      _eventRange = range;
+    }
+    return _rangeEvents
+        .where((event) => _categories.contains(event.category))
+        .toList();
+  }
+
+  Future<void> _export(
+    BuildContext buttonContext,
+    List<SkyEvent> events,
+  ) async {
+    if (_exporting) return;
+    final box = buttonContext.findRenderObject() as RenderBox?;
+    final origin = box == null
+        ? null
+        : box.localToGlobal(Offset.zero) & box.size;
+    setState(() => _exporting = true);
+    try {
+      final selected = await showDialog<List<SkyEvent>>(
+        context: context,
+        builder: (context) =>
+            _ExportEventDialog(events: events, zone: widget.zone),
+      );
+      if (selected == null || !mounted) return;
+      final calendar = exportCalendar(selected, createdAt: DateTime.now());
+      await SharePlus.instance.share(
+        ShareParams(
+          title: 'Export Astro Worker events',
+          files: [
+            XFile.fromData(utf8.encode(calendar), mimeType: 'text/calendar'),
+          ],
+          fileNameOverrides: const ['astro-worker-events.ics'],
+          sharePositionOrigin: origin,
+        ),
+      );
+    } on Exception {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not export the calendar file.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -506,19 +573,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
       ),
       CalendarSpan.year => (DateTime.utc(day.year), DateTime.utc(day.year + 1)),
     };
-    final events = widget.engine
-        .events(
-          start.subtract(const Duration(days: 1)),
-          end.add(const Duration(days: 1)),
-        )
-        .where((event) {
-          final local = inDisplayZone(event.instant, widget.zone);
-          final date = DateTime.utc(local.year, local.month, local.day);
-          return !date.isBefore(start) &&
-              date.isBefore(end) &&
-              _categories.contains(event.category);
-        })
-        .toList();
+    final events = _eventsInRange(start, end);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -558,6 +613,19 @@ class _CalendarPanelState extends State<CalendarPanel> {
               ),
           ],
         ),
+        if (events.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Builder(
+              builder: (buttonContext) => OutlinedButton.icon(
+                onPressed: _exporting
+                    ? null
+                    : () => _export(buttonContext, events),
+                icon: const Icon(Icons.ios_share),
+                label: const Text('Export events'),
+              ),
+            ),
+          ),
         _Panel(
           title: 'Calculated events',
           children: [
@@ -617,5 +685,62 @@ class _Panel extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+class _ExportEventDialog extends StatefulWidget {
+  const _ExportEventDialog({required this.events, required this.zone});
+
+  final List<SkyEvent> events;
+  final String zone;
+
+  @override
+  State<_ExportEventDialog> createState() => _ExportEventDialogState();
+}
+
+class _ExportEventDialogState extends State<_ExportEventDialog> {
+  final _selected = <SkyEvent>{};
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Choose events to export'),
+    semanticLabel: 'Choose events to export',
+    content: SizedBox(
+      width: 420,
+      height: 340,
+      child: ListView.builder(
+        itemCount: widget.events.length,
+        itemBuilder: (context, index) {
+          final event = widget.events[index];
+          return CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _selected.contains(event),
+            title: Text(event.name),
+            subtitle: Text(
+              formatMoment(context, inDisplayZone(event.instant, widget.zone)),
+            ),
+            onChanged: (checked) => setState(() {
+              if (checked == true) {
+                _selected.add(event);
+              } else {
+                _selected.remove(event);
+              }
+            }),
+          );
+        },
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: _selected.isEmpty
+            ? null
+            : () => Navigator.pop(context, _selected.toList()),
+        child: const Text('Export .ics'),
+      ),
+    ],
   );
 }

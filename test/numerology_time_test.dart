@@ -44,4 +44,18 @@ void main() {
       );
     },
   );
+  test(
+    'leap birthday yields each personal number with either reduction rule',
+    () {
+      final day = DateTime.utc(2025, 2, 2);
+      final leapBirthday = DateTime.utc(2000, 2, 29);
+      for (final keepMasters in [true, false]) {
+        final method = Numerology(keepMasterNumbers: keepMasters);
+        expect(method.personalYear(day, leapBirthday), keepMasters ? 22 : 4);
+        expect(method.personalMonth(day, leapBirthday), 6);
+        expect(method.personalDay(day, leapBirthday), 8);
+        expect(method.lifePath(leapBirthday), 6);
+      }
+    },
+  );
 }
