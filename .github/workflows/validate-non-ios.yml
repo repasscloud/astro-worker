@@ -40,7 +40,7 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: matrix.target == 'Web'
         with:
           node-version: '24'
