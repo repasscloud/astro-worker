@@ -5,7 +5,7 @@ See [GitHub milestones](https://github.com/repasscloud/astro-worker/milestones) 
 | Milestone | Initial status |
 | --- | --- |
 | 0 Project Foundation | Five runners, documentation, CI and project management established. |
-| 1 Astronomical Calculation Engine | Pure-Dart engine and phase fixtures implemented. Full-range qualification, extra bodies, observer and resource work open. |
+| 1 Astronomical Calculation Engine | Pure-Dart engine, initial reference fixtures and manual observer horizon events implemented. Full-range qualification, extra bodies, location permissions and resource work open. |
 | 2 Core Application | Nine destinations, positions, active aspects and calculated event lists implemented. Event-solving and sidereal support open. |
 | 3 Numerology and Spiritual Content | Universal and personal numbers, master numbers and versioned English editorial content implemented. Localisation and content expansion open. |
 | 4 Native Widgets | Snapshot contract and previews established. Native integration remains open independently by platform. |

@@ -9,11 +9,13 @@ import 'package:astronomia/moonposition.dart' as moon;
 import 'package:astronomia/nutation.dart' as nut;
 import 'package:astronomia/planetposition.dart' as planets;
 import 'package:astronomia/solar.dart' as solar;
+import 'package:astronomia/sidereal.dart' as sidereal;
 import 'package:astronomia/solstice.dart' as season;
 
 import 'dart:math' as math;
 
 import '../domain/astronomy.dart';
+import '../domain/horizon.dart';
 
 const _dayMs = 86400000;
 const _epoch = 2440587.5;
@@ -22,7 +24,7 @@ const _degrees = 180 / math.pi;
 
 /// UT is approximated by UTC. Delta T follows the NASA 2005–2050 polynomial
 /// and its adjacent intervals, documented in the calculation notes.
-class MeeusEngine implements AstronomyEngine {
+class MeeusEngine implements AstronomyEngine, HorizonEngine {
   final _earth = planets.Planet(planets.planetEarth);
   final _planets = {
     Body.mercury: planets.Planet(planets.planetMercury),
@@ -137,6 +139,41 @@ class MeeusEngine implements AstronomyEngine {
         ? null
         : instant.difference(newMoons.last.instant).inSeconds / 86400;
     return SkySnapshot(Map.unmodifiable(positions), angle, illumination, age);
+  }
+
+  @override
+  HorizonDay horizon(DateTime from, DateTime until, Observer observer) {
+    if (from.isBefore(start) ||
+        until.isAfter(end) ||
+        !from.isBefore(until) ||
+        until.difference(from) > const Duration(hours: 48)) {
+      throw RangeError(
+        'Observer calculation requires one civil day within the ephemeris range.',
+      );
+    }
+    return solveHorizon(from.toUtc(), until.toUtc(), (instant) {
+      final jd = utcJulianDay(instant);
+      final jde = jd + _deltaT(instant) / 86400;
+      final sun = _coordinates(Body.sun, jde);
+      final lunar = _coordinates(Body.moon, jde);
+      final greenwich = sidereal.apparent(jd) * 2 * math.pi / 86400;
+      final latitude = observer.latitude / _degrees;
+      final longitudeWest = -observer.longitude / _degrees;
+      final sunAltitude = coord
+          .eqToHz(sun.ra, sun.dec, latitude, longitudeWest, greenwich)
+          .alt;
+      final lunarAltitude = coord
+          .eqToHz(lunar.ra, lunar.dec, latitude, longitudeWest, greenwich)
+          .alt;
+      // Approximate conventional upper-limb Moonrise with geocentric parallax.
+      final lunarThreshold =
+          0.7275 * moon.parallax(lunar.km!) * _degrees - 34 / 60;
+      return (
+        sun: sunAltitude * _degrees,
+        moon: lunarAltitude * _degrees,
+        moonThreshold: lunarThreshold,
+      );
+    });
   }
 
   @override

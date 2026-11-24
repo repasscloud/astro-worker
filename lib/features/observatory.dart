@@ -5,6 +5,7 @@ import '../domain/astrology.dart';
 import '../domain/astronomy.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
+import '../domain/horizon.dart';
 import '../infrastructure/content.dart';
 import '../platform/widget_snapshot.dart';
 import '../shared/moon_disc.dart';
@@ -36,6 +37,7 @@ class Observatory extends StatelessWidget {
     required this.showSpiritual,
     required this.south,
     required this.orb,
+    required this.observer,
   });
 
   final Destination destination;
@@ -50,6 +52,7 @@ class Observatory extends StatelessWidget {
   final bool showSpiritual;
   final bool south;
   final double orb;
+  final Observer? observer;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +141,7 @@ class Observatory extends StatelessWidget {
           for (final aspect in aspects.take(3)) Text(_aspectText(aspect)),
         ],
       ),
+      _horizon(context, lunar: false),
       _Panel(
         title: 'Upcoming events',
         children: [
@@ -191,11 +195,10 @@ class Observatory extends StatelessWidget {
           Text(
             'Schematic · ${south ? 'Southern' : 'Northern'} Hemisphere convention',
           ),
-          const Text(
-            'Local Moonrise, Moonset and observer orientation are pending.',
-          ),
+          const Text('Observer-dependent orientation is pending.'),
         ],
       ),
+      _horizon(context, lunar: true),
       _Panel(
         title: 'Previous and upcoming lunar phases',
         children: [
@@ -203,6 +206,64 @@ class Observatory extends StatelessWidget {
         ],
       ),
     ];
+  }
+
+  Widget _horizon(BuildContext context, {required bool lunar}) {
+    final location = observer;
+    final provider = engine;
+    final heading = lunar ? 'Moonrise and Moonset' : 'Sun and twilight';
+    if (location == null || provider is! HorizonEngine) {
+      return _Panel(
+        title: heading,
+        children: [
+          const Text(
+            'Set optional observer coordinates in Settings to see local horizon events.',
+          ),
+        ],
+      );
+    }
+    final start = civilDayStart(day, zone);
+    final end = civilDayStart(
+      DateTime.utc(day.year, day.month, day.day + 1),
+      zone,
+    );
+    if (start.isBefore(engine.start) || end.isAfter(engine.end)) {
+      return _Panel(
+        title: heading,
+        children: [
+          const Text(
+            'This civil day lies outside the supported horizon range.',
+          ),
+        ],
+      );
+    }
+    final horizon = (provider as HorizonEngine).horizon(start, end, location);
+    final relevant = horizon.events.where(
+      (event) =>
+          (event.kind == HorizonKind.moonrise ||
+              event.kind == HorizonKind.moonset) ==
+          lunar,
+    );
+    return _Panel(
+      title: heading,
+      children: [
+        if (!lunar)
+          Text(
+            'Daylight · ${horizon.daylight.inHours} h ${horizon.daylight.inMinutes % 60} min',
+          ),
+        if (relevant.isEmpty)
+          const Text('No matching events on this civil date.'),
+        if (lunar)
+          for (final kind in [HorizonKind.moonrise, HorizonKind.moonset])
+            if (!relevant.any((event) => event.kind == kind))
+              Text('${kind.label} does not occur on this civil date.'),
+        for (final event in relevant)
+          Text(
+            '${event.kind.label} · ${formatMoment(context, inDisplayZone(event.instant, zone))}',
+          ),
+        const Text('Approximate, for a level horizon at sea level.'),
+      ],
+    );
   }
 
   Widget _positionCard(

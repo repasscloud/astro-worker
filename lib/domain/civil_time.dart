@@ -35,3 +35,17 @@ DateTime? resolveWallTime(DateTime wall, String zone) {
   }
   return null;
 }
+
+/// Find the first representable minute on a civil date. A skipped date
+/// has the same boundary as the following day.
+DateTime civilDayStart(DateTime date, String zone) {
+  final midnight = DateTime.utc(date.year, date.month, date.day);
+  for (var minute = 0; minute <= 1440; minute++) {
+    final instant = resolveWallTime(
+      midnight.add(Duration(minutes: minute)),
+      zone,
+    );
+    if (instant != null) return instant;
+  }
+  throw StateError('No representable civil day boundary.');
+}

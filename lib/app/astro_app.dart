@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../domain/astronomy.dart';
 import '../domain/civil_time.dart';
 import '../domain/numerology.dart';
+import '../domain/horizon.dart';
 import '../features/observatory.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/preferences.dart';
@@ -43,6 +44,7 @@ class _AstroAppState extends State<AstroApp> {
   late bool _south;
   late double _orb;
   DateTime? _birth;
+  Observer? _observer;
 
   Preferences get _preferences => widget.preferences;
 
@@ -64,6 +66,17 @@ class _AstroAppState extends State<AstroApp> {
     _south = _preferences.flag('south') ?? false;
     _orb = (_preferences.decimal('orb') ?? 4).clamp(1, 10);
     _birth = DateTime.tryParse(_preferences.text('birth') ?? '');
+    final location = _preferences.text('observer')?.split(',');
+    if (location != null && location.length == 2) {
+      try {
+        _observer = Observer(
+          latitude: double.parse(location.first),
+          longitude: double.parse(location.last),
+        );
+      } on FormatException {
+        _observer = null;
+      }
+    }
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (_selected == null) setState(() {});
     });
@@ -186,6 +199,7 @@ class _AstroAppState extends State<AstroApp> {
                           showSpiritual: _spiritual,
                           south: _south,
                           orb: _orb,
+                          observer: _observer,
                         ),
                     ],
                   ),
@@ -301,6 +315,17 @@ class _AstroAppState extends State<AstroApp> {
       trailing: const Icon(Icons.edit_outlined),
       onTap: () => _editZone(context),
     ),
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('Observer coordinates'),
+      subtitle: Text(
+        _observer == null
+            ? 'Optional · used for Sun and Moon horizon events'
+            : '${_observer!.latitude}°, ${_observer!.longitude}°',
+      ),
+      trailing: const Icon(Icons.edit_location_alt_outlined),
+      onTap: () => _editObserver(context),
+    ),
     SwitchListTile(
       contentPadding: EdgeInsets.zero,
       title: const Text('Show spiritual content'),
@@ -394,6 +419,100 @@ class _AstroAppState extends State<AstroApp> {
       ),
     ),
   ];
+
+  Future<void> _editObserver(BuildContext context) async {
+    var latitude = _observer?.latitude.toString() ?? '';
+    var longitude = _observer?.longitude.toString() ?? '';
+    final decision = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Observer coordinates'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: latitude,
+                decoration: const InputDecoration(
+                  labelText: 'Latitude in degrees north',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  signed: true,
+                  decimal: true,
+                ),
+                onChanged: (value) => latitude = value.trim(),
+              ),
+              TextFormField(
+                initialValue: longitude,
+                decoration: const InputDecoration(
+                  labelText: 'Longitude in degrees east',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  signed: true,
+                  decimal: true,
+                ),
+                onChanged: (value) => longitude = value.trim(),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          if (_observer != null)
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Clear'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (decision == null || !context.mounted) return;
+    if (!decision) {
+      final removed = await _preferences.remove('observer');
+      if (!context.mounted) return;
+      if (removed) {
+        setState(() => _observer = null);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('The saved coordinates could not be cleared.'),
+          ),
+        );
+      }
+      return;
+    }
+    try {
+      final observer = Observer(
+        latitude: double.parse(latitude),
+        longitude: double.parse(longitude),
+      );
+      setState(() => _observer = observer);
+      await _save(
+        context,
+        _preferences.writeText(
+          'observer',
+          '${observer.latitude},${observer.longitude}',
+        ),
+      );
+    } on FormatException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Enter latitude from −90 to 90 and longitude from −180 to 180.',
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _editZone(BuildContext context) async {
     var input = _zone;

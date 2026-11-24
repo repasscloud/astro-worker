@@ -7,3 +7,9 @@ UTC is used as an approximation to UT1. The app applies the Espenak and Meeus pi
 Moon illumination uses the actual Sun/Moon distance geometry and lunar latitude. Phase labels use nearest 45° elongation sectors, whereas exact phase events use the separate Meeus phase equations. Lunar age is elapsed time since the previous calculated new Moon. The disc represents illumination fraction with a conventional hemisphere selection. Observer position angle and local horizon events remain open.
 
 The calendar applies Meeus phase, eclipse, apsis and seasonal equations, enumerates candidate lunations from seven-day seeds and deduplicates overlapping candidates. Eclipse times denote global estimated maximum. Local contacts and visibility are pending. Calendar windows filter UTC events against civil date boundaries in the display zone.
+
+## Horizon events
+
+Users can enter decimal latitude and east-positive longitude. The selected display timezone defines the civil-day interval, including daylight-saving changes. The engine converts apparent geocentric equatorial coordinates to altitude, brackets threshold crossings on a five-minute grid and refines them to one second. At shallow or grazing crossings, threshold geometry and sampling limit precision.
+
+Sunrise and sunset use a −50 arcminute solar centre threshold. Civil, nautical and astronomical twilight use −6°, −12° and −18°. Moonrise and moonset use distance-dependent parallax and a conventional 34 arcminute atmospheric correction. Solar noon is the refined maximum altitude in the civil interval. Mountains, weather, elevation and observer-dependent lunar orientation are outside this implementation. Missing events are represented explicitly and daylight is clipped to the civil interval.
