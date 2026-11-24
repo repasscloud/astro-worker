@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:astro_worker/app/astro_app.dart';
 import 'package:astro_worker/infrastructure/content.dart';
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
 import 'package:astro_worker/infrastructure/preferences.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,7 +18,25 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       SharedPreferences.setMockInitialValues({'astro.v1.zone': 'UTC'});
       final preferences = await Preferences.open();
-      final content = await EditorialContent.load();
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMessageHandler('flutter/assets', (message) async {
+        expect(
+          utf8.decode(message!.buffer.asUint8List()),
+          'assets/content/en.v1.json',
+        );
+        return ByteData.sublistView(
+          utf8.encode(
+            '{"schema":1,"numbers":{"5":["Teal","428F92","Change","Stay curious."]},'
+            '"prompts":["What changed today?"]}',
+          ),
+        );
+      });
+      final EditorialContent content;
+      try {
+        content = await EditorialContent.load();
+      } finally {
+        messenger.setMockMessageHandler('flutter/assets', null);
+      }
       await tester.pumpWidget(
         AstroApp(
           engine: MeeusEngine(),
