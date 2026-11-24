@@ -28,6 +28,10 @@
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		AC5700000000000000000001 /* MoonWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC5700000000000000000006 /* MoonWidget.swift */; };
+		AC5700000000000000000002 /* MoonWidgetStore.swift in Widget Sources */ = {isa = PBXBuildFile; fileRef = AC5700000000000000000007 /* MoonWidgetStore.swift */; };
+		AC5700000000000000000003 /* MoonWidgetStore.swift in Runner Sources */ = {isa = PBXBuildFile; fileRef = AC5700000000000000000007 /* MoonWidgetStore.swift */; };
+		AC5700000000000000000004 /* MoonWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AC5700000000000000000005 /* MoonWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +49,13 @@
 			remoteGlobalIDString = 33CC111A2044C6BA0003C045;
 			remoteInfo = FLX;
 		};
+		AC5700000000000000000010 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AC570000000000000000000C;
+			remoteInfo = MoonWidget;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -56,6 +67,17 @@
 			files = (
 			);
 			name = "Bundle Framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AC5700000000000000000011 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AC5700000000000000000004 /* MoonWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -80,6 +102,12 @@
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		AC5700000000000000000005 /* MoonWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoonWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC5700000000000000000006 /* MoonWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonWidget.swift; sourceTree = "<group>"; };
+		AC5700000000000000000007 /* MoonWidgetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonWidgetStore.swift; sourceTree = "<group>"; };
+		AC5700000000000000000008 /* MoonWidget.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = MoonWidget.xcconfig; sourceTree = "<group>"; };
+		AC5700000000000000000009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AC570000000000000000000A /* MoonWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoonWidget.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +152,7 @@
 			isa = PBXGroup;
 			children = (
 				33FAB671232836740065AC1E /* Runner */,
+				AC570000000000000000000B /* MoonWidget */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
 				33CC10EE2044A3C60003C045 /* Products */,
@@ -135,6 +164,7 @@
 			isa = PBXGroup;
 			children = (
 				33CC10ED2044A3C60003C045 /* astro_worker.app */,
+				AC5700000000000000000005 /* MoonWidget.appex */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
 			);
 			name = Products;
@@ -183,6 +213,18 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		AC570000000000000000000B /* MoonWidget */ = {
+			isa = PBXGroup;
+			children = (
+				AC5700000000000000000006 /* MoonWidget.swift */,
+				AC5700000000000000000007 /* MoonWidgetStore.swift */,
+				AC5700000000000000000008 /* MoonWidget.xcconfig */,
+				AC5700000000000000000009 /* Info.plist */,
+				AC570000000000000000000A /* MoonWidget.entitlements */,
+			);
+			path = MoonWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -212,12 +254,14 @@
 				33CC10EA2044A3C60003C045 /* Frameworks */,
 				33CC10EB2044A3C60003C045 /* Resources */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
+				AC5700000000000000000011 /* Embed App Extensions */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
+				AC570000000000000000000F /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -226,6 +270,21 @@
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* astro_worker.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AC570000000000000000000C /* MoonWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC570000000000000000000D /* Build configuration list for PBXNativeTarget "MoonWidget" */;
+			buildPhases = (
+				AC570000000000000000000E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoonWidget;
+			productName = MoonWidget;
+			productReference = AC5700000000000000000005 /* MoonWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -275,6 +334,7 @@
 			projectRoot = "";
 			targets = (
 				33CC10EC2044A3C60003C045 /* Runner */,
+				AC570000000000000000000C /* MoonWidget */,
 				331C80D4294CF70F00263BE5 /* RunnerTests */,
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
 			);
@@ -356,7 +416,17 @@
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
+				AC5700000000000000000003 /* MoonWidgetStore.swift in Runner Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AC570000000000000000000E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AC5700000000000000000001 /* MoonWidget.swift in Sources */,
+				AC5700000000000000000002 /* MoonWidgetStore.swift in Widget Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,6 +442,11 @@
 			isa = PBXTargetDependency;
 			target = 33CC111A2044C6BA0003C045 /* Flutter Assemble */;
 			targetProxy = 33CC111F2044C79F0003C045 /* PBXContainerItemProxy */;
+		};
+		AC570000000000000000000F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AC570000000000000000000C /* MoonWidget */;
+			targetProxy = AC5700000000000000000010 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -485,7 +560,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(ASTRO_DEBUG_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -617,7 +692,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(ASTRO_DEBUG_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -637,7 +712,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(ASTRO_RELEASE_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -665,6 +740,27 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
+		};
+		AC5700000000000000000012 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AC5700000000000000000008 /* MoonWidget.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		AC5700000000000000000013 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AC5700000000000000000008 /* MoonWidget.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		AC5700000000000000000014 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AC5700000000000000000008 /* MoonWidget.xcconfig */;
+			buildSettings = {
+			};
+			name = Profile;
 		};
 /* End XCBuildConfiguration section */
 
@@ -705,6 +801,16 @@
 				33CC111C2044C6BA0003C045 /* Debug */,
 				33CC111D2044C6BA0003C045 /* Release */,
 				338D0CEB231458BD00FA5F75 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AC570000000000000000000D /* Build configuration list for PBXNativeTarget "MoonWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC5700000000000000000012 /* Debug */,
+				AC5700000000000000000013 /* Release */,
+				AC5700000000000000000014 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

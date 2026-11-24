@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/astronomy.dart';
@@ -11,7 +12,7 @@ import '../domain/horizon.dart';
 import '../features/observatory.dart';
 import '../infrastructure/content.dart';
 import '../infrastructure/preferences.dart';
-import '../platform/android_moon_widget.dart';
+import '../platform/native_moon_widget.dart';
 import 'branding.dart';
 import 'build_identity.dart';
 import 'destination.dart';
@@ -23,13 +24,13 @@ class AstroApp extends StatefulWidget {
     required this.preferences,
     required this.content,
     required this.clock,
-    this.androidMoonWidget,
+    this.nativeMoonWidget,
   });
   final AstronomyEngine engine;
   final Preferences preferences;
   final EditorialContent content;
   final DateTime Function() clock;
-  final AndroidMoonWidget? androidMoonWidget;
+  final NativeMoonWidget? nativeMoonWidget;
 
   @override
   State<AstroApp> createState() => _AstroAppState();
@@ -60,38 +61,10 @@ class _AstroAppState extends State<AstroApp> {
   @override
   void initState() {
     super.initState();
-    _themeMode =
-        ThemeMode.values.asNameMap()[_preferences.text('theme')] ??
-        ThemeMode.system;
-    final zone = _preferences.text('zone');
-    _zone =
-        zone == 'device' ||
-            zone == 'UTC' ||
-            tz.timeZoneDatabase.locations.containsKey(zone)
-        ? zone!
-        : 'device';
-    _spiritual = _preferences.flag('spiritual') ?? true;
-    _masters = _preferences.flag('masters') ?? true;
-    _south = _preferences.flag('south') ?? false;
-    _zodiac =
-        Zodiac.values.asNameMap()[_preferences.text('zodiac')] ??
-        Zodiac.tropical;
-    _orb = (_preferences.decimal('orb') ?? 4).clamp(1, 10);
-    _birth = DateTime.tryParse(_preferences.text('birth') ?? '');
-    final location = _preferences.text('observer')?.split(',');
-    if (location != null && location.length == 2) {
-      try {
-        _observer = Observer(
-          latitude: double.parse(location.first),
-          longitude: double.parse(location.last),
-        );
-      } on FormatException {
-        _observer = null;
-      }
-    }
-    final androidWidget = widget.androidMoonWidget;
-    if (androidWidget != null) {
-      androidWidget.onOpenMoon = (section) {
+    _loadPreferences();
+    final publisher = widget.nativeMoonWidget;
+    if (publisher != null) {
+      publisher.onOpenMoon = (section) {
         if (!mounted) return;
         _scaffold.currentState?.closeDrawer();
         setState(() {
@@ -109,19 +82,44 @@ class _AstroAppState extends State<AstroApp> {
     });
   }
 
+  void _loadPreferences() {
+    _themeMode =
+        ThemeMode.values.asNameMap()[_preferences.text('theme')] ??
+        ThemeMode.system;
+    final zone = _preferences.text('zone');
+    _zone =
+        zone == 'device' ||
+            zone == 'UTC' ||
+            tz.timeZoneDatabase.locations.containsKey(zone)
+        ? zone!
+        : 'device';
+    _spiritual = _preferences.flag('spiritual') ?? true;
+    _masters = _preferences.flag('masters') ?? true;
+    _south = _preferences.flag('south') ?? false;
+    _zodiac =
+        Zodiac.values.asNameMap()[_preferences.text('zodiac')] ??
+        Zodiac.tropical;
+    _orb = (_preferences.decimal('orb') ?? 4).clamp(1, 10);
+    _birth = Preferences.parseBirthDate(
+      _preferences.text('birth'),
+      widget.clock().toLocal(),
+    );
+    _observer = Preferences.parseObserver(_preferences.text('observer'));
+  }
+
   @override
   void dispose() {
     _timer.cancel();
     _lifecycle?.dispose();
-    widget.androidMoonWidget?.onOpenMoon = null;
+    widget.nativeMoonWidget?.onOpenMoon = null;
     super.dispose();
   }
 
   void _refreshMoonWidget() {
-    final androidWidget = widget.androidMoonWidget;
-    if (androidWidget == null) return;
+    final publisher = widget.nativeMoonWidget;
+    if (publisher == null) return;
     unawaited(
-      androidWidget.refresh(
+      publisher.refresh(
         widget.engine,
         widget.clock(),
         _zone,
@@ -356,6 +354,7 @@ class _AstroAppState extends State<AstroApp> {
 
   List<Widget> _settings(BuildContext context) => [
     DropdownButtonFormField<ThemeMode>(
+      key: ValueKey(_themeMode),
       initialValue: _themeMode,
       decoration: const InputDecoration(labelText: 'Theme'),
       items: [
@@ -417,6 +416,7 @@ class _AstroAppState extends State<AstroApp> {
       },
     ),
     DropdownButtonFormField<Zodiac>(
+      key: ValueKey(_zodiac),
       initialValue: _zodiac,
       isExpanded: true,
       decoration: const InputDecoration(labelText: 'Zodiac system'),
@@ -490,6 +490,24 @@ class _AstroAppState extends State<AstroApp> {
     ),
     ListTile(
       contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.backup_outlined),
+      title: const Text('Settings backup'),
+      onTap: () => _exportSettings(context),
+    ),
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.settings_backup_restore),
+      title: const Text('Restore settings'),
+      onTap: () => _restoreSettings(context),
+    ),
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.delete_outline),
+      title: const Text('Reset app settings'),
+      onTap: () => _resetSettings(context),
+    ),
+    ListTile(
+      contentPadding: EdgeInsets.zero,
       title: const Text('About and licences'),
       subtitle: Text('Meeus / VSOP87 · 2000–2050 UTC · ${_zodiac.label}'),
       onTap: () => showAboutDialog(
@@ -510,6 +528,148 @@ class _AstroAppState extends State<AstroApp> {
       ),
     ),
   ];
+
+  Future<void> _exportSettings(BuildContext context) async {
+    var includePersonal = false;
+    final backup = await showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Copy settings backup'),
+          scrollable: true,
+          content: CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Include birth date and observer coordinates'),
+            value: includePersonal,
+            onChanged: (checked) =>
+                setDialogState(() => includePersonal = checked ?? false),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(
+                context,
+                _preferences.exportBackup(includePersonal: includePersonal),
+              ),
+              child: const Text('Copy backup'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (backup == null || !context.mounted) return;
+    try {
+      await Clipboard.setData(ClipboardData(text: backup));
+      if (context.mounted) _settingsMessage(context, 'Settings backup copied.');
+    } on PlatformException {
+      if (context.mounted) {
+        _settingsMessage(context, 'Could not copy settings.');
+      }
+    }
+  }
+
+  Future<void> _restoreSettings(BuildContext context) async {
+    var input = '';
+    final backup = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Restore settings'),
+        scrollable: true,
+        content: TextField(
+          decoration: const InputDecoration(
+            labelText: 'Paste a settings backup',
+          ),
+          minLines: 3,
+          maxLines: 7,
+          maxLength: 8192,
+          onChanged: (value) => input = value,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, input),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+    if (backup == null || !context.mounted) return;
+    try {
+      final restored = await _preferences.restoreBackup(
+        backup,
+        now: widget.clock().toLocal(),
+      );
+      if (!context.mounted) return;
+      if (restored) {
+        setState(_loadPreferences);
+        _refreshMoonWidget();
+      }
+      _settingsMessage(
+        context,
+        restored ? 'Settings restored.' : 'Could not save restored settings.',
+      );
+    } on FormatException {
+      if (context.mounted) {
+        _settingsMessage(context, 'This settings backup is invalid.');
+      }
+    } on Exception {
+      if (context.mounted) {
+        _settingsMessage(context, 'Could not save restored settings.');
+      }
+    }
+  }
+
+  Future<void> _resetSettings(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset app settings?'),
+        content: const Text(
+          'This clears preferences and removes the saved birth date and observer coordinates.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      final reset = await _preferences.reset();
+      if (!context.mounted) return;
+      if (reset) {
+        setState(() {
+          _loadPreferences();
+          _selected = null;
+        });
+        _refreshMoonWidget();
+      }
+      _settingsMessage(
+        context,
+        reset ? 'App settings reset.' : 'Could not reset app settings.',
+      );
+    } on Exception {
+      if (context.mounted) {
+        _settingsMessage(context, 'Could not reset app settings.');
+      }
+    }
+  }
+
+  void _settingsMessage(BuildContext context, String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _editObserver(BuildContext context) async {
     var latitude = _observer?.latitude.toString() ?? '';

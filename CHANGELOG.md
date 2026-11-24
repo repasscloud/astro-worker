@@ -24,3 +24,6 @@
 - Add a zodiac wheel, Lahiri and Fagan–Bradley settings, and exact major-aspect searches. Use the selected zodiac for sign labels, ingresses, and widget snapshots. ([#8](https://github.com/repasscloud/astro-worker/issues/8))
 - Audit licence evidence for every locked Dart package and verify dependency notices are available from the app offline. ([#41](https://github.com/repasscloud/astro-worker/issues/41), [#42](https://github.com/repasscloud/astro-worker/issues/42))
 - Show lunar apsides, approximate observer-oriented Moon artwork, and a separately labelled traditional void-of-course window with two body sets. ([#6](https://github.com/repasscloud/astro-worker/issues/6))
+- Add local settings backup, validated restore, and reset. Migrate existing preferences and exclude personal details from backups by default. ([#25](https://github.com/repasscloud/astro-worker/issues/25))
+- Embed a small and medium Moon widget for macOS with offline WidgetKit timelines and an App Group signing template. ([#15](https://github.com/repasscloud/astro-worker/issues/15))
+- Record the Windows Widgets Board packaging path and the Windows 11 host checks still required. ([#16](https://github.com/repasscloud/astro-worker/issues/16))

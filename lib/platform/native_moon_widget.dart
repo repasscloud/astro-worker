@@ -13,7 +13,7 @@ import '../domain/zodiac.dart';
 import '../infrastructure/lunar_editorial.dart';
 import 'widget_snapshot.dart';
 
-class AndroidMoonWidget {
+class NativeMoonWidget {
   static const _channel = MethodChannel('astro_worker/moon_widget');
   int _revision = 0;
 
@@ -32,6 +32,8 @@ class AndroidMoonWidget {
     try {
       final target = await _channel.invokeMethod<String>('consumeOpenMoon');
       if (target != null) callback(_section(target));
+    } on MissingPluginException {
+      // The native widget channel is absent on unsupported OS versions.
     } on PlatformException catch (error) {
       debugPrint('Moon widget launch unavailable: ${error.code}');
     }
@@ -50,7 +52,7 @@ class AndroidMoonWidget {
     required Zodiac zodiac,
   }) async {
     final revision = ++_revision;
-    final timeline = await compute(buildAndroidMoonTimeline, (
+    final timeline = await compute(buildNativeMoonTimeline, (
       engine: engine,
       now: DateTime.fromMillisecondsSinceEpoch(
         now.millisecondsSinceEpoch,
@@ -65,6 +67,8 @@ class AndroidMoonWidget {
     if (revision != _revision) return;
     try {
       await _channel.invokeMethod<void>('publish', jsonEncode(timeline));
+    } on MissingPluginException {
+      // The native widget channel is absent on unsupported OS versions.
     } on PlatformException catch (error) {
       debugPrint('Moon widget update unavailable: ${error.code}');
     }
@@ -72,7 +76,7 @@ class AndroidMoonWidget {
 }
 
 @visibleForTesting
-List<Map<String, Object>> buildAndroidMoonTimeline(
+List<Map<String, Object>> buildNativeMoonTimeline(
   ({
     AstronomyEngine engine,
     DateTime now,

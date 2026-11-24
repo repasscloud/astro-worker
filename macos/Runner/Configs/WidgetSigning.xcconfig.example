@@ -1,0 +1,6 @@
+// Copy to WidgetSigning.xcconfig and use your registered Apple team.
+DEVELOPMENT_TEAM = YOURTEAMID
+ASTRO_WIDGET_ENABLED = YES
+ASTRO_DEBUG_ENTITLEMENTS = Runner/DebugWidget.entitlements
+ASTRO_RELEASE_ENTITLEMENTS = Runner/ReleaseWidget.entitlements
+ASTRO_EXTENSION_ENTITLEMENTS = MoonWidget/MoonWidget.entitlements

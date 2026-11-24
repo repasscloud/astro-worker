@@ -47,12 +47,14 @@ update("lib/app/branding.dart", lambda _: (
     f"  static const identifier = {dart(identifier)};\n"
     "}\n"
 ))
-substitute("android/app/src/main/AndroidManifest.xml", r'(android:label=")[^"]*(")', html.escape(name))
+substitute("android/app/src/main/AndroidManifest.xml", r'(<application\b[^>]*?android:label=")[^"]*(")', html.escape(name))
 substitute("android/app/build.gradle.kts", r'(applicationId = ")[^"]*(")', identifier)
 substitute("ios/Runner/Info.plist", r'(<key>CFBundleDisplayName</key>\s*<string>)[^<]*(</string>)', html.escape(name))
 substitute("ios/Runner.xcodeproj/project.pbxproj", r'(PRODUCT_BUNDLE_IDENTIFIER = )[\w.]+?(\.RunnerTests;|;)', identifier)
 substitute("macos/Runner/Configs/AppInfo.xcconfig", r'(PRODUCT_BUNDLE_IDENTIFIER = )[^\n]*()', identifier)
 substitute("macos/Runner/Configs/AppInfo.xcconfig", r'(APP_DISPLAY_NAME = )[^\n]*()', name)
+substitute("macos/Runner/Configs/AppInfo.xcconfig", r'(ASTRO_WIDGET_GROUP = group\.)[^\n]*()', identifier)
+substitute("macos/MoonWidget/MoonWidget.xcconfig", r'(PRODUCT_BUNDLE_IDENTIFIER = )[\w.]+?(\.MoonWidget)', identifier)
 substitute("macos/Runner.xcodeproj/project.pbxproj", r'(PRODUCT_BUNDLE_IDENTIFIER = )[\w.]+?(\.RunnerTests;|;)', identifier)
 substitute("windows/runner/main.cpp", r'(window.Create\(L")[^"]*(")', json.dumps(name)[1:-1])
 substitute("windows/runner/Runner.rc", r'(VALUE "CompanyName", ")[^"]*(")', json.dumps(publisher)[1:-1])

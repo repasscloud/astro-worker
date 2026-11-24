@@ -1,0 +1,7 @@
+# Windows Widgets Board evaluation
+
+The current Windows build is a Flutter Win32 executable. The hosted [Windows validation run](https://github.com/repasscloud/astro-worker/actions/runs/45473741428) built it on Windows Server 2025. That runner verifies compilation. Windows 11 with the Widgets Board is required to verify provider discovery, pinning, and updates.
+
+The desktop path is a packaged Win32 provider. A separate process implements the Windows App SDK `IWidgetProvider` interface, renders an Adaptive Card, and uses `WidgetManager` to send updates. The MSIX manifest declares the COM server and widget extension. Persist the existing versioned Moon timeline in package-local storage so the provider can refresh when the Flutter app is closed. An app URI links back to Moon details. Package signing and an interactive Windows 11 install are the acceptance checks for this path. [Microsoft Win32 widget guide](https://learn.microsoft.com/en-us/windows/apps/develop/widgets/implement-widget-provider-win32), [Microsoft package manifest reference](https://learn.microsoft.com/windows/apps/develop/widgets/widget-provider-manifest)
+
+A PWA widget is a separate option. It uses manifest declarations and service-worker events, and depends on the installed PWA and Windows host support. The existing offline PWA remains available as an app. A compact app window would be a desktop view. [Microsoft widget provider options](https://learn.microsoft.com/en-us/windows/apps/develop/widgets/widget-providers)

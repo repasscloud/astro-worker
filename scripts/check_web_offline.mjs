@@ -12,13 +12,14 @@ const chromeExecutable = process.env.CHROME_EXECUTABLE
     : 'google-chrome');
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-async function until(check) {
-  for (let i = 0; i < 160; i++) {
+async function until(check, label = "browser condition", timeout = 20000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
     const result = await check();
     if (result) return result;
     await sleep(125);
   }
-  throw new Error('Browser condition timed out');
+  throw new Error(`Timed out waiting for ${label}`);
 }
 const work = await fs.mkdtemp(path.join(os.tmpdir(), 'astro-pwa-'));
 const a = path.join(work, 'a');
@@ -48,16 +49,22 @@ const server = http.createServer(async (req,res) => {
 await new Promise(resolve => server.listen(0,'127.0.0.1', resolve));
 const url = 'http://127.0.0.1:'+server.address().port+'/astro/';
 const chrome = spawn(chromeExecutable,
-  ['--headless','--remote-debugging-port=0','--disable-background-networking','--disable-extensions','--no-first-run','--user-data-dir='+work+'/chrome','about:blank'],
-  {stdio:'ignore'});
+  ['--headless','--remote-debugging-port=0','--disable-background-networking','--disable-dev-shm-usage','--disable-extensions','--no-first-run','--user-data-dir='+work+'/chrome','about:blank'],
+  {stdio:['ignore', 'ignore', 'pipe']});
 let ws;
 let launchError;
+let chromeOutput = '';
+chrome.stderr.setEncoding('utf8');
+chrome.stderr.on('data', chunk => { chromeOutput = (chromeOutput + chunk).slice(-3000); });
 chrome.on('error', error => { launchError = error; });
+chrome.on('exit', (status, signal) => {
+  launchError ??= new Error(`Chrome exited (${status ?? signal}): ${chromeOutput}`);
+});
 try {
   const port = await until(async () => {
     if (launchError) throw launchError;
     try { return (await fs.readFile(work+'/chrome/DevToolsActivePort','utf8')).split('\n')[0]; } catch { return null; }
-  });
+  }, 'Chrome DevTools startup', 40000);
   const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
   ws = new WebSocket(tabs.find(tab => tab.type === 'page').webSocketDebuggerUrl);
   await new Promise(resolve => ws.addEventListener('open', resolve, {once:true}));

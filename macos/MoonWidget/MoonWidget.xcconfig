@@ -1,0 +1,12 @@
+#include "../Runner/Configs/AppInfo.xcconfig"
+#include? "../Flutter/ephemeral/Flutter-Generated.xcconfig"
+
+APPLICATION_EXTENSION_API_ONLY = YES
+CODE_SIGN_ENTITLEMENTS = $(ASTRO_EXTENSION_ENTITLEMENTS)
+CODE_SIGN_STYLE = Automatic
+INFOPLIST_FILE = MoonWidget/Info.plist
+MACOSX_DEPLOYMENT_TARGET = 14.0
+PRODUCT_NAME = MoonWidget
+PRODUCT_BUNDLE_IDENTIFIER = com.sisterswithmirrors.astroworker.MoonWidget
+SKIP_INSTALL = YES
+SWIFT_VERSION = 5.0

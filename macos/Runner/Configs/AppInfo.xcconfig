@@ -13,3 +13,10 @@ PRODUCT_BUNDLE_IDENTIFIER = com.sisterswithmirrors.astroworker
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.sisterswithmirrors. All rights reserved.
+
+ASTRO_WIDGET_GROUP = group.com.sisterswithmirrors.astroworker
+ASTRO_WIDGET_ENABLED = NO
+ASTRO_DEBUG_ENTITLEMENTS = Runner/DebugProfile.entitlements
+ASTRO_RELEASE_ENTITLEMENTS = Runner/Release.entitlements
+ASTRO_EXTENSION_ENTITLEMENTS = MoonWidget/UnsignedWidget.entitlements
+#include? "WidgetSigning.xcconfig"

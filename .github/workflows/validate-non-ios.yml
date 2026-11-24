@@ -39,6 +39,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
       - uses: actions/setup-node@v6
         if: matrix.target == 'Web'
         with:
@@ -47,7 +48,15 @@ jobs:
       - name: Build Android and test widget timelines
         if: matrix.target == 'Android'
         run: |
-          flutter build apk --debug --no-pub
+          for delay in 0 15 45; do
+            sleep "$delay"
+            if flutter build apk --debug --no-pub 2>&1 | tee "$RUNNER_TEMP/android-build.log"; then
+              break
+            fi
+            if ! grep -q '429\|503\|timed out' "$RUNNER_TEMP/android-build.log" || [[ "$delay" == 45 ]]; then
+              exit 1
+            fi
+          done
           python3 scripts/audit_dart_licenses.py --bundle build/app/outputs/flutter-apk/app-debug.apk
           cd android
           ./gradlew :app:testDebugUnitTest

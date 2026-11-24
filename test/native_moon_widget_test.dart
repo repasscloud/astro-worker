@@ -1,6 +1,6 @@
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
 import 'package:astro_worker/domain/zodiac.dart';
-import 'package:astro_worker/platform/android_moon_widget.dart';
+import 'package:astro_worker/platform/native_moon_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,7 +10,7 @@ void main() {
     final phases = engine.events(now, now.add(const Duration(days: 14)));
     final fullMoon = phases.firstWhere((event) => event.name == 'Full Moon');
 
-    final rows = buildAndroidMoonTimeline((
+    final rows = buildNativeMoonTimeline((
       engine: engine,
       now: now,
       zone: 'Australia/Adelaide',
