@@ -8,6 +8,7 @@ import '../domain/zodiac.dart';
 import '../infrastructure/preferences.dart';
 import '../shared/zodiac_wheel.dart';
 import 'observatory.dart' show formatMoment, titleCase;
+import 'personal_chart_tools.dart';
 
 class BirthCharts extends StatefulWidget {
   const BirthCharts({
@@ -171,6 +172,16 @@ class _BirthChartsState extends State<BirthCharts> {
           for (final entry in chart.signs.entries)
             Text(
               '${titleCase(entry.key.name)} · ${entry.value ?? 'Varies during the day'}',
+            ),
+          if (chart.instant != null)
+            PersonalChartTools(
+              key: ValueKey(profile.id),
+              engine: widget.engine,
+              zodiac: widget.zodiac,
+              profile: profile,
+              chart: chart,
+              profiles: widget.profiles,
+              clock: widget.clock,
             ),
           if (chart.ascendant case final ascent?) ...[
             Semantics(

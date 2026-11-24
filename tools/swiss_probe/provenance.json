@@ -1,0 +1,14 @@
+{
+  "package": "sweph",
+  "version": "4.1.0+2.10.3",
+  "archive_sha256": "edd55b855350d0daeb6c8209a05777c597c0affd8c789d5c2789dd0234a81401",
+  "source": "https://github.com/vm75/sweph.dart",
+  "licence": "AGPL-3.0-only",
+  "files": {
+    "assets/ephe/sepl_18.se1": "0b7e416e3c1be9e6a0dd1d711dae7f7685793a0e7df13f76363a493dc27b6ea1",
+    "assets/ephe/semo_18.se1": "ecfa54dbf5bc0b5a9bc3e04ed28629a821e98625eacae38f4070593bba0e2980",
+    "assets/ephe/seas_18.se1": "0afe3f94769b6718082411c2c4fb06bf9d1aaa6c0bc1bad8f8b8725421ef8748",
+    "assets/sweph.wasm": "e689177c658d2fa813e12eb7828d0e9a17433af2441ba9cbc0028fc239cc3e65"
+  },
+  "native_source_sha256": "259d1f987a5367ada13194ca1ea15c7b42b540d05cc0c2d794baa1ba89d82111"
+}

@@ -77,3 +77,17 @@ jobs:
       - name: Build Windows
         if: matrix.target == 'Windows'
         run: flutter build windows --debug --no-pub
+      - name: Probe the pinned Swiss native candidate on Windows
+        if: matrix.target == 'Windows'
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installerswhere.exe"
+          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw "Visual C++ tools are unavailable" }
+          Import-Module "$vs\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
+          dart pub cache add sweph --version '4.1.0+2.10.3'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $cache = if ($env:PUB_CACHE) { $env:PUB_CACHE } else { Join-Path $env:LOCALAPPDATA 'Pub/Cache' }
+          python tools/swiss_probe/probe_native.py (Join-Path $cache 'hosted/pub.dev/sweph-4.1.0+2.10.3')
+          exit $LASTEXITCODE

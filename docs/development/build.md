@@ -35,3 +35,7 @@ Before the first public release, move Unreleased changelog entries to
 applicable channel clears the release gates.
 
 Use `gh workflow run validate-non-ios.yml --ref main` for an on-demand hosted validation of Android, macOS, Web and Windows. The workflow builds each target, runs the shared and packaged-web checks, runs Android widget timeline tests and runs the macOS integration test. Automatic validation stays paused.
+
+Official Android APK and app bundle builds use `ASTRO_ANDROID_KEYSTORE`, `ASTRO_ANDROID_STORE_PASSWORD`, `ASTRO_ANDROID_KEY_ALIAS`, and `ASTRO_ANDROID_KEY_PASSWORD`. Supply them through the build environment and keep their values and keystore outside version control. Use the configured upload key for Play App Signing. A self-build can use Flutter's normal debug signing with a separate app identifier.
+
+The non-iOS release wrapper stages the artifact, exact-revision project source archive, and their SHA-256 checksums under `build/releases/`. A staged build is a candidate for review. Clear the applicable [channel gates](../platforms/distribution.md) before publication.

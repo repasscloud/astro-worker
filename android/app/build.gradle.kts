@@ -4,6 +4,17 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val astroReleaseSigning = listOf(
+    "ASTRO_ANDROID_KEYSTORE",
+    "ASTRO_ANDROID_STORE_PASSWORD",
+    "ASTRO_ANDROID_KEY_ALIAS",
+    "ASTRO_ANDROID_KEY_PASSWORD",
+).associateWith { providers.environmentVariable(it).orNull?.takeIf(String::isNotBlank) }
+val astroReleaseSigningConfigured = astroReleaseSigning.values.all { it != null }
+if (!astroReleaseSigningConfigured && astroReleaseSigning.values.any { it != null }) {
+    throw GradleException("Set all four ASTRO_ANDROID_* signing variables for a signed release.")
+}
+
 android {
     namespace = "com.sisterswithmirrors.astro_worker"
     compileSdk = flutter.compileSdkVersion
@@ -29,11 +40,22 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (astroReleaseSigningConfigured) {
+            create("astroRelease") {
+                storeFile = file(astroReleaseSigning.getValue("ASTRO_ANDROID_KEYSTORE")!!)
+                storePassword = astroReleaseSigning.getValue("ASTRO_ANDROID_STORE_PASSWORD")
+                keyAlias = astroReleaseSigning.getValue("ASTRO_ANDROID_KEY_ALIAS")
+                keyPassword = astroReleaseSigning.getValue("ASTRO_ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(
+                if (astroReleaseSigningConfigured) "astroRelease" else "debug"
+            )
         }
     }
 }

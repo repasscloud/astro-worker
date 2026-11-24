@@ -12,6 +12,14 @@ if [[ $# != 2 || ! "$package_build" =~ ^[1-9][0-9]*$ ]]; then
   echo "Supply a positive numeric package build number." >&2
   exit 2
 fi
+if [[ "$target" == apk || "$target" == appbundle ]]; then
+  for key in ASTRO_ANDROID_KEYSTORE ASTRO_ANDROID_STORE_PASSWORD ASTRO_ANDROID_KEY_ALIAS ASTRO_ANDROID_KEY_PASSWORD; do
+    if [[ -z "${!key:-}" ]]; then
+      echo "Set $key to build an official signed Android package." >&2
+      exit 2
+    fi
+  done
+fi
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Release builds require a clean committed checkout." >&2
   exit 1
@@ -33,6 +41,7 @@ fi
 metadata="build/release-$target.json"
 rm -f "$metadata"
 flutter pub get --enforce-lockfile
+python3 scripts/audit_dart_licenses.py
 options=(
   --release --no-pub
   "--build-name=$version" "--build-number=$package_build"
@@ -50,18 +59,4 @@ if [[ "$(git rev-parse HEAD)" != "$revision" || -n "$(git status --porcelain)" ]
   echo "The checkout changed while building. Discard this build." >&2
   exit 1
 fi
-python3 - "$metadata" "$target" "$version" "$package_build" "$short_revision" "$revision" <<'PY'
-import json
-from pathlib import Path
-import sys
-
-output, target, version, number, short, revision = sys.argv[1:]
-Path(output).write_text(json.dumps({
-    "target": target,
-    "version": version,
-    "displayVersion": f"{version} build {short}",
-    "packageBuildNumber": int(number),
-    "sourceRevision": revision,
-    "sourceUrl": f"https://github.com/repasscloud/astro-worker/tree/{revision}",
-}, indent=2) + "\n")
-PY
+python3 scripts/stage_release.py "$target" "$version" "$package_build" "$revision" "$short_revision" "$metadata"
