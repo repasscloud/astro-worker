@@ -15,3 +15,4 @@
 - Reuse calendar calculations while toggling filters or refreshing the same date range. ([#24](https://github.com/repasscloud/astro-worker/issues/24))
 - Add a Chromium smoke test for web installability, offline startup, service-worker upgrades, and rollback. ([#17](https://github.com/repasscloud/astro-worker/issues/17))
 - Expose the current screen title as a heading for assistive technology and verify keyboard event selection at increased text scale. ([#23](https://github.com/repasscloud/astro-worker/issues/23))
+- Validate the full Android widget timeline before replacing cached data and ignore corrupt or expired snapshots. ([#12](https://github.com/repasscloud/astro-worker/issues/12))

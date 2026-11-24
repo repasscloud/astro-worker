@@ -14,3 +14,5 @@ The launcher controls final widget dimensions. The Moon illustrations follow the
 iOS and macOS require distinct WidgetKit targets, App Group sharing and system-managed timelines. Windows Widgets Board needs host capability and packaging investigation. Web supports the app dashboard with install and offline caching through a manifest and service worker.
 
 The app also includes Moon and universal-day previews. Hardware verification and further platform work remain tracked in the [widget milestone](https://github.com/repasscloud/astro-worker/milestone/5).
+
+Samsung Galaxy A14 5G smoke verification confirmed all four providers registered, Moon Glance rendered artwork in a placed 1 × 1 cell, and tapping that widget opened Moon details. Launch actions for the other three widgets reached their corresponding app panels. Launcher resizing and real-time offline refresh across a phase change remain release-acceptance checks.

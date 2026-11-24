@@ -23,8 +23,12 @@ class MainActivity : FlutterActivity() {
                         result.success(target)
                     }
                     "publish" -> {
-                        LunarWidgetProvider.publish(this, call.arguments as String)
-                        result.success(null)
+                        val timeline = call.arguments as? String
+                        if (timeline != null && LunarWidgetProvider.publish(this, timeline)) {
+                            result.success(null)
+                        } else {
+                            result.error("invalid_timeline", "The Moon widget timeline is invalid.", null)
+                        }
                     }
                     else -> result.notImplemented()
                 }
