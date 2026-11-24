@@ -13,11 +13,12 @@ for name in required:
     if not (root / name).is_file():
         sys.exit(f"Expected standard JavaScript Flutter web build file: {name}")
 
+(root / "flutter_service_worker.js").unlink(missing_ok=True)
 digest = hashlib.sha256(template.read_bytes())
 assets = []
 for path in sorted(root.rglob("*")):
     if not path.is_file() or path.name in {
-        "offline-worker.js", "flutter_service_worker.js", ".last_build_id",
+        "offline-worker.js", ".last_build_id",
     } or path.suffix == ".map":
         continue
     name = quote(path.relative_to(root).as_posix())
