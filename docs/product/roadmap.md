@@ -13,4 +13,4 @@ See [GitHub milestones](https://github.com/repasscloud/astro-worker/milestones) 
 | 6 Personal Astrology | Deferred birth profiles, natal charts, houses, transits and relationship charts. |
 | 7 Cross-Platform Quality and Release | Accessibility, privacy, performance, signing and per-platform acceptance remain open. |
 
-Swiss Ephemeris adoption is an [owner decision](https://github.com/repasscloud/astro-worker/issues/1). Core development can proceed with the current provider. Full release accuracy remains an [open gate](https://github.com/repasscloud/astro-worker/issues/3).
+The [owner approved AGPL-3.0 and Swiss Ephemeris](https://github.com/repasscloud/astro-worker/issues/1). Source, self-builds and web access are free. Planned one-time purchases are AUD $4.99 on Android and iOS and AUD $7.99 on macOS and Windows, subject to channel clearance. Core development can proceed with the current provider. Full release accuracy remains an [open gate](https://github.com/repasscloud/astro-worker/issues/3).

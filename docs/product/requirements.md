@@ -104,25 +104,16 @@ Investigate how the necessary ephemeris data files can be packaged, loaded, cach
 
 ### 5.1 Licensing
 
-Swiss Ephemeris is available under dual licensing arrangements.
+Astro Worker and the planned Swiss Ephemeris integration follow AGPL-3.0.
+Qualify bindings, binaries, data and corresponding source per channel.
 
-Investigate and document:
+Source, self-compiled builds and web access are free. Planned official native
+builds are one-time purchases in AUD. Android and iOS are $4.99 each. macOS
+and Windows are $7.99 each. Every platform's features are available to users
+who compile that platform themselves. Distribution has no ads, accounts,
+subscriptions, in-app purchases or custom activation.
 
-- AGPL obligations.
-- Professional licensing requirements.
-- Application distribution implications.
-- Web application implications.
-- Third-party dependency licences.
-- Ephemeris data distribution requirements.
-- Any differences between native and browser implementations.
-
-Do not assume that publishing a free application removes licensing obligations.
-
-Do not automatically apply an open-source licence to the entire project or purchase a commercial licence without approval.
-
-Create a GitHub issue covering any licensing decisions requiring project owner approval.
-
-Until licensing is resolved, establish a replaceable astronomical calculation abstraction, and ensure that release or distribution of restricted components remains blocked.
+See the [distribution decision](../decisions/0003-agpl-distribution.md).
 
 ### 5.2 Calculation abstraction
 
