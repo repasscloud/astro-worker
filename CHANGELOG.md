@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Verify rise, set, and solar noon for Adelaide, San Francisco, and Apia against independent sea-level calculations. ([#5](https://github.com/repasscloud/astro-worker/issues/5))
+
 - Label UTC and the selected local time zone in calendar event details. ([#9](https://github.com/repasscloud/astro-worker/issues/9))
 - Check bundled Windows licence notices and confirm that Web startup uses only same-origin resources. ([#25](https://github.com/repasscloud/astro-worker/issues/25), [#42](https://github.com/repasscloud/astro-worker/issues/42))
 

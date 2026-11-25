@@ -63,6 +63,64 @@ void main() {
     }
   });
 
+  test(
+    'rise and set agree with independent north, south and date-line cases',
+    () {
+      // Swiss Ephemeris 2.10.03 swe_rise_trans at sea level, with refraction,
+      // 1013.25 hPa and 15 °C. Times rounded to the nearest minute.
+      const cases = [
+        (
+          'Australia/Adelaide',
+          -34.9285,
+          138.6007,
+          [(6, 16), (20, 32), (13, 24), (20, 24), (4, 53)],
+        ),
+        (
+          'America/Los_Angeles',
+          37.7749,
+          -122.4194,
+          [(7, 24), (17, 13), (12, 19), (17, 2), (7, 37)],
+        ),
+        (
+          'Pacific/Apia',
+          -13.8333,
+          -171.75,
+          [(6, 10), (19, 2), (12, 36), (18, 30), (4, 56)],
+        ),
+      ];
+      const kinds = [
+        HorizonKind.sunrise,
+        HorizonKind.sunset,
+        HorizonKind.solarNoon,
+        HorizonKind.moonrise,
+        HorizonKind.moonset,
+      ];
+      for (final (zone, latitude, longitude, times) in cases) {
+        final horizon = engine.horizon(
+          civilDayStart(DateTime.utc(2025, 1, 13), zone),
+          civilDayStart(DateTime.utc(2025, 1, 14), zone),
+          Observer(latitude: latitude, longitude: longitude),
+        );
+        for (var index = 0; index < kinds.length; index++) {
+          final kind = kinds[index];
+          final (hour, minute) = times[index];
+          final expected = resolveWallTime(
+            DateTime.utc(2025, 1, 13, hour, minute),
+            zone,
+          )!;
+          final actual = horizon.events
+              .singleWhere((event) => event.kind == kind)
+              .instant;
+          expect(
+            actual.difference(expected).abs(),
+            lessThanOrEqualTo(const Duration(minutes: 3)),
+            reason: '$zone · ${kind.label}',
+          );
+        }
+      }
+    },
+  );
+
   test('civil day bounds cover Australian DST and skip the Samoan date line change', () {
     const adelaide = 'Australia/Adelaide';
     expect(
