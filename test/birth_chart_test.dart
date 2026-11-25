@@ -52,6 +52,30 @@ void main() {
     },
   );
 
+  test('matches independent tropical house fixtures in both hemispheres', () {
+    // Swiss Ephemeris 2.10.03 swe_houses, UT JD 2460689.435416667.
+    final instant = DateTime.utc(2025, 1, 13, 22, 27);
+    const samples = [
+      (-34.9285, 138.6007, 325.933680, [300, 330, 0]),
+      (37.7749, -122.4194, 78.130233, [60, 90, 120]),
+      (69.6492, 18.9553, 189.704273, [180, 210, 240]),
+    ];
+    for (final (latitude, longitude, expected, wholeSign) in samples) {
+      final ascendant = engine.ascendant(
+        instant,
+        Observer(latitude: latitude, longitude: longitude),
+      )!;
+      expect(ascendant, closeTo(expected, .01), reason: 'latitude $latitude');
+      expect(houseCusps(ascendant, HouseSystem.wholeSign).take(3), wholeSign);
+      for (var index = 0; index < 12; index++) {
+        expect(
+          houseCusps(ascendant, HouseSystem.equal)[index],
+          closeTo(normalize(expected + 30 * index), .01),
+        );
+      }
+    }
+  });
+
   test('equatorial horizon selects the eastern intersection and handles polar limits', () {
     final equator = Observer(latitude: 0, longitude: 0);
     expect(

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Cross-check house systems at three latitudes and qualify sample personal chart comparisons and a solar return against Swiss Ephemeris reference values. ([#21](https://github.com/repasscloud/astro-worker/issues/21), [#22](https://github.com/repasscloud/astro-worker/issues/22))
+
 - Regenerate Flutter's release plugin registrants when staging packages and check the Android release-mode APK in hosted validation. ([#26](https://github.com/repasscloud/astro-worker/issues/26))
 
 - Initialise the shared Flutter application and platform runners.
