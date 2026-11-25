@@ -9,6 +9,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Bundle
 import android.widget.RemoteViews
 import org.json.JSONObject
 import java.text.NumberFormat
@@ -23,6 +24,12 @@ abstract class LunarWidgetProvider(private val layout: Int) : AppWidgetProvider(
         if (ids.isNotEmpty()) {
             manager.updateAppWidget(ids, widgetViews(context, layout, currentMoon(context)))
         }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context, manager: AppWidgetManager, id: Int, options: Bundle
+    ) {
+        onUpdate(context, manager, intArrayOf(id))
     }
 
     companion object {
@@ -43,15 +50,22 @@ abstract class LunarWidgetProvider(private val layout: Int) : AppWidgetProvider(
         fun publish(context: Context, timeline: String): Boolean {
             val validated = MoonWidgetTimeline.parse(timeline) ?: return false
             storage(context).edit().putString(TIMELINE, timeline).apply()
+            refreshWidgets(context, validated.at(System.currentTimeMillis()))
+            return true
+        }
+
+        fun refreshFromCache(context: Context) {
+            refreshWidgets(context, currentMoon(context))
+        }
+
+        private fun refreshWidgets(context: Context, entry: JSONObject?) {
             val manager = AppWidgetManager.getInstance(context)
-            val entry = validated.at(System.currentTimeMillis())
             for ((type, layout) in providers) {
                 val component = ComponentName(context, type)
                 if (manager.getAppWidgetIds(component).isNotEmpty()) {
                     manager.updateAppWidget(component, widgetViews(context, layout, entry))
                 }
             }
-            return true
         }
 
         private fun widgetViews(context: Context, layout: Int, data: JSONObject?): RemoteViews {
@@ -66,7 +80,10 @@ abstract class LunarWidgetProvider(private val layout: Int) : AppWidgetProvider(
                 .putExtra(TARGET, section)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             val tap = PendingIntent.getActivity(context, layout, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-            return RemoteViews(context.packageName, layout).apply {
+            // A launcher may reapply actions to the existing layout. Use a
+            // different layout so expired data cannot remain on screen.
+            val viewLayout = if (data == null) R.layout.moon_widget_stale else layout
+            return RemoteViews(context.packageName, viewLayout).apply {
                 setOnClickPendingIntent(R.id.moon_widget, tap)
                 if (data == null) return@apply
                 val phase = data.optString("phase")

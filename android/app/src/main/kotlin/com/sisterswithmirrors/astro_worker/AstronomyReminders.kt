@@ -18,8 +18,10 @@ import java.util.TimeZone
 
 class AstronomyReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == AstronomyReminders.FIRE) {
-            AstronomyReminders.deliver(context)
+        when (intent.action) {
+            AstronomyReminders.FIRE -> AstronomyReminders.deliver(context)
+            Intent.ACTION_TIME_CHANGED, Intent.ACTION_BOOT_COMPLETED ->
+                LunarWidgetProvider.refreshFromCache(context)
         }
         AstronomyReminders.reconcile(context)
     }

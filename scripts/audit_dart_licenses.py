@@ -47,10 +47,10 @@ def evidence_for(source, sdk_root):
         files = [sdk_root / "LICENSE"]
     return [
         {
-            "file": item.name if item.parent == source else "Flutter SDK/LICENSE",
+            "file": item.name.upper() if item.parent == source else "Flutter SDK/LICENSE",
             "sha256": hashlib.sha256(item.read_bytes().replace(b"\r\n", b"\n")).hexdigest(),
         }
-        for item in files
+        for item in sorted(files, key=lambda path: path.name.upper())
     ]
 
 

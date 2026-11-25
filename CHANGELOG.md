@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refresh Android launcher widgets from their offline timeline after a resize, reboot, or manual clock change. Replace expired values with a tap-to-refresh tile. ([#12](https://github.com/repasscloud/astro-worker/issues/12), [#13](https://github.com/repasscloud/astro-worker/issues/13))
+- Accept consistent licence filenames across Flutter SDK archives while continuing to verify their content hashes. ([#42](https://github.com/repasscloud/astro-worker/issues/42))
+
 - Verify rise, set, and solar noon for Adelaide, San Francisco, and Apia against independent sea-level calculations. ([#5](https://github.com/repasscloud/astro-worker/issues/5))
 
 - Label UTC and the selected local time zone in calendar event details. ([#9](https://github.com/repasscloud/astro-worker/issues/9))
