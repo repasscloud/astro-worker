@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Regenerate Flutter's release plugin registrants when staging packages and check the Android release-mode APK in hosted validation. ([#26](https://github.com/repasscloud/astro-worker/issues/26))
+
 - Initialise the shared Flutter application and platform runners.
 - Add offline astronomy, numerology and daily editorial content.
 - Calculate local horizon events from optional observer coordinates.

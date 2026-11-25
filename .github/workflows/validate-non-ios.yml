@@ -60,6 +60,12 @@ jobs:
           python3 scripts/audit_dart_licenses.py --bundle build/app/outputs/flutter-apk/app-debug.apk
           cd android
           ./gradlew :app:testDebugUnitTest
+      - name: Build and audit an Android release-mode APK
+        if: matrix.target == 'Android'
+        run: |
+          flutter build apk --release
+          python3 scripts/audit_dart_licenses.py --bundle build/app/outputs/flutter-apk/app-release.apk
+          git diff --exit-code -- pubspec.lock
       - name: Run shared and packaged web checks
         if: matrix.target == 'Web'
         run: |

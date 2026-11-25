@@ -43,7 +43,8 @@ rm -f "$metadata"
 flutter pub get --enforce-lockfile
 python3 scripts/audit_dart_licenses.py
 options=(
-  --release --no-pub
+  # Flutter regenerates the release plugin registrants when pub is enabled.
+  --release
   "--build-name=$version" "--build-number=$package_build"
   "--dart-define=ASTRO_VERSION=$version"
   "--dart-define=ASTRO_BUILD_HASH=$short_revision"
