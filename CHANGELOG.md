@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rebuild the Swiss Ephemeris WebAssembly candidate with a pinned compiler image and verify its offline samples and missing-data flags. ([#40](https://github.com/repasscloud/astro-worker/issues/40))
+
 - Verify bundled Web renderer files against the pinned Flutter SDK checksums before building the offline cache. ([#42](https://github.com/repasscloud/astro-worker/issues/42))
 
 - Refresh Android launcher widgets from their offline timeline after a resize, reboot, or manual clock change. Replace expired values with a tap-to-refresh tile. ([#12](https://github.com/repasscloud/astro-worker/issues/12), [#13](https://github.com/repasscloud/astro-worker/issues/13))

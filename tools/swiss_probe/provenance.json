@@ -3,6 +3,7 @@
   "version": "4.1.0+2.10.3",
   "archive_sha256": "edd55b855350d0daeb6c8209a05777c597c0affd8c789d5c2789dd0234a81401",
   "source": "https://github.com/vm75/sweph.dart",
+  "source_revision": "8d369dd92a884c4331be8df2a08f447ba938adc7",
   "licence": "AGPL-3.0-only",
   "files": {
     "assets/ephe/sepl_18.se1": "0b7e416e3c1be9e6a0dd1d711dae7f7685793a0e7df13f76363a493dc27b6ea1",
@@ -10,5 +11,15 @@
     "assets/ephe/seas_18.se1": "0afe3f94769b6718082411c2c4fb06bf9d1aaa6c0bc1bad8f8b8725421ef8748",
     "assets/sweph.wasm": "e689177c658d2fa813e12eb7828d0e9a17433af2441ba9cbc0028fc239cc3e65"
   },
-  "native_source_sha256": "259d1f987a5367ada13194ca1ea15c7b42b540d05cc0c2d794baa1ba89d82111"
+  "native_source_sha256": "259d1f987a5367ada13194ca1ea15c7b42b540d05cc0c2d794baa1ba89d82111",
+  "wasm_rebuild": {
+    "emsdk_version": "4.0.23",
+    "platform": "linux/arm64",
+    "image": "docker.io/emscripten/emsdk@sha256:72b65e3361a8778734ce9b1d1dfeadafa4accef9134531ad9385356ea6cb6d56",
+    "sha256": "e3be519a3b2cd8a249c590e7a3ef927342686b603fb8485e078d9abf063f2264",
+    "glue": {
+      "mem_io.c": "7400b26da667f86018837de5e05eeef754d0a5f8b813cf185c6d0536e1e21109",
+      "mem_io.h": "9f91bebce1fcdb633598de9a77ab7734d8045ef9e47d48980b6404bfcf3b4813"
+    }
+  }
 }
