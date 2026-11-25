@@ -82,7 +82,9 @@ jobs:
           python3 scripts/audit_dart_licenses.py --bundle "$(find build/macos/Build/Products/Debug -name NOTICES.Z -print -quit)"
       - name: Build Windows
         if: matrix.target == 'Windows'
-        run: flutter build windows --debug --no-pub
+        run: |
+          flutter build windows --debug --no-pub
+          python scripts/audit_dart_licenses.py --bundle "$(find build/windows -name NOTICES.Z -print -quit)"
       - name: Probe the pinned Swiss native candidate on Windows
         if: matrix.target == 'Windows'
         shell: pwsh

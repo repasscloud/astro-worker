@@ -92,6 +92,11 @@ try {
     return Math.round(performance.now()-start);
   };
   console.log('Initial controlled app render:', await open('a'), 'ms');
+  const crossOriginResources = await evaluate(`performance.getEntriesByType('resource')
+    .map(entry => new URL(entry.name))
+    .filter(url => ['http:', 'https:'].includes(url.protocol) && url.origin !== location.origin)
+    .map(url => url.href)`);
+  assert.deepEqual(crossOriginResources, [], 'App startup must use same-origin web resources');
   const errors = await cdp('Page.getInstallabilityErrors');
   assert.deepEqual(errors.installabilityErrors, []);
   console.log('Chromium reported no installability errors');

@@ -69,6 +69,14 @@ void main() {
       await tester.tap(find.text('Lunar apsides'));
       await tester.pumpAndSettle();
       expect(engine.queries, 1);
+      expect(find.text('Lunar perigee'), findsNothing);
+      final event = find.text('Full Moon');
+      await tester.ensureVisible(event);
+      await tester.tap(event);
+      await tester.pumpAndSettle();
+      expect(find.textContaining(' UTC\nMoon'), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
       final openExport = find.text('Export events');
       await tester.ensureVisible(openExport);
       await tester.tap(openExport);

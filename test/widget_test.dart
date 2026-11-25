@@ -1,8 +1,10 @@
 import 'package:astro_worker/app/astro_app.dart';
 import 'package:astro_worker/app/build_identity.dart';
+import 'package:astro_worker/domain/zodiac.dart';
 import 'package:astro_worker/infrastructure/content.dart';
 import 'package:astro_worker/infrastructure/meeus_engine.dart';
 import 'package:astro_worker/infrastructure/preferences.dart';
+import 'package:astro_worker/shared/zodiac_wheel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,6 +47,16 @@ void main() {
       );
 
       expect(find.textContaining('Sidereal · Lahiri ·'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Open navigation'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Astrology').first);
+      await tester.pumpAndSettle();
+      final wheel = tester.widget<ZodiacWheel>(find.byType(ZodiacWheel));
+      expect(
+        wheel.offset,
+        Zodiac.lahiri.offset(DateTime.utc(2025, 1, 13, 22, 27)),
+      );
 
       await tester.tap(find.byTooltip('Open navigation'));
       await tester.pumpAndSettle();

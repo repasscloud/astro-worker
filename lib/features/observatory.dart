@@ -921,7 +921,9 @@ Widget _eventTile(BuildContext context, SkyEvent event, String zone) {
       builder: (context) => AlertDialog(
         title: Text(event.name),
         content: Text(
-          '$time\n${formatMoment(context, event.instant)}\n${titleCase(event.body.name)}',
+          '${zone == 'UTC' ? '' : '$time · $zone\n'}'
+          '${formatMoment(context, event.instant.toUtc())} UTC\n'
+          '${titleCase(event.body.name)}',
         ),
         actions: [
           TextButton(
