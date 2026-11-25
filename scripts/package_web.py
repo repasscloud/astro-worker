@@ -7,11 +7,27 @@ import sys
 from urllib.parse import quote
 
 root = Path(sys.argv[1])
-template = Path(__file__).resolve().parents[1] / "web/offline-worker.js"
+project = Path(__file__).resolve().parents[1]
+template = project / "web/offline-worker.js"
 required = ["index.html", "flutter_bootstrap.js", "main.dart.js", "manifest.json"]
 for name in required:
     if not (root / name).is_file():
         sys.exit(f"Expected standard JavaScript Flutter web build file: {name}")
+
+provenance = json.loads((project / "notices/web-renderer.json").read_text())
+if provenance["flutter"] != (project / ".flutter-version").read_text().strip():
+    sys.exit("Review and update the web renderer inventory for this Flutter version.")
+renderer = root / "canvaskit"
+actual = {
+    path.relative_to(renderer).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+    for path in renderer.rglob("*")
+    if path.is_file() and path.suffix in {".js", ".wasm"}
+}
+expected = provenance["files"]
+different = sorted(name for name in actual.keys() | expected.keys()
+                   if actual.get(name) != expected.get(name))
+if different:
+    sys.exit("Bundled renderer differs from the pinned SDK artifacts: " + ", ".join(different))
 
 (root / "flutter_service_worker.js").unlink(missing_ok=True)
 digest = hashlib.sha256(template.read_bytes())

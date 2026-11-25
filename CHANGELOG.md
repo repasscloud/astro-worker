@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Verify bundled Web renderer files against the pinned Flutter SDK checksums before building the offline cache. ([#42](https://github.com/repasscloud/astro-worker/issues/42))
+
 - Refresh Android launcher widgets from their offline timeline after a resize, reboot, or manual clock change. Replace expired values with a tap-to-refresh tile. ([#12](https://github.com/repasscloud/astro-worker/issues/12), [#13](https://github.com/repasscloud/astro-worker/issues/13))
 - Accept consistent licence filenames across Flutter SDK archives while continuing to verify their content hashes. ([#42](https://github.com/repasscloud/astro-worker/issues/42))
 
