@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate or check licence evidence for the resolved Flutter/Dart packages."""
 import argparse
+import difflib
 import gzip
 import hashlib
 import json
@@ -83,9 +84,10 @@ def audit():
 
 
 def verify_bundle(path, packages):
-    if path.suffix == ".apk":
+    if path.suffix in {".apk", ".aab"}:
+        prefix = "base/" if path.suffix == ".aab" else ""
         with ZipFile(path) as archive:
-            data = archive.read("assets/flutter_assets/NOTICES.Z")
+            data = archive.read(prefix + "assets/flutter_assets/NOTICES.Z")
     else:
         data = path.read_bytes()
     if data.startswith(b"\x1f\x8b"):
@@ -105,15 +107,23 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true", help="Update the checked-in audit.")
     parser.add_argument(
-        "--bundle", type=Path, help="Also check a built APK, NOTICES or NOTICES.Z file."
+        "--bundle", type=Path, help="Also check a built APK, AAB, NOTICES or NOTICES.Z file."
     )
     args = parser.parse_args()
     inventory = audit()
     generated = json.dumps(inventory, indent=2) + "\n"
     if args.write:
         OUTPUT.write_text(generated, encoding="utf-8")
-    elif not OUTPUT.is_file() or OUTPUT.read_text(encoding="utf-8") != generated:
-        raise SystemExit("Licence audit differs. Review changes and run scripts/audit_dart_licenses.py --write.")
+    else:
+        previous = OUTPUT.read_text(encoding="utf-8") if OUTPUT.is_file() else ""
+        if previous != generated:
+            differences = "".join(difflib.unified_diff(
+                previous.splitlines(keepends=True),
+                generated.splitlines(keepends=True),
+                fromfile="checked-in audit",
+                tofile="resolved audit",
+            ))
+            raise SystemExit("Licence audit differs. Review changes before updating the audit.\n" + differences)
     packages = inventory["packages"]
     print(f"Verified licence evidence for {len(packages)} packages.")
     if args.bundle:
